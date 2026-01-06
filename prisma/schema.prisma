@@ -29,6 +29,8 @@ model TradieProfile {
   updatedAt     DateTime @updatedAt
   quotes        Quote[]
   leads         Lead[]
+  rateMemories  RateMemory[]
+  rateSamples   RateSample[]
 }
 
 model Lead {
@@ -90,6 +92,10 @@ model QuoteLine {
   unit      String
   unitRate  Decimal  @db.Decimal(12, 2) @default(0)
   lineTotal Decimal  @db.Decimal(12, 2) @default(0)
+  suggestedUnitRate Decimal? @db.Decimal(12, 2)
+  rateSource        String?
+  rateConfidence    Int?
+  needsReview       Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -109,4 +115,36 @@ model QuotePublicLink {
   updatedAt     DateTime @updatedAt
 
   @@index([quoteId])
+}
+
+model RateMemory {
+  id             String        @id @default(uuid())
+  tradieId       String
+  tradie         TradieProfile @relation(fields: [tradieId], references: [id], onDelete: Cascade)
+  normalizedName String
+  unit           String
+  category       String?
+  sampleCount    Int           @default(0)
+  lastRate       Decimal       @db.Decimal(12, 2) @default(0)
+  medianRate     Decimal       @db.Decimal(12, 2) @default(0)
+  minRate        Decimal       @db.Decimal(12, 2) @default(0)
+  maxRate        Decimal       @db.Decimal(12, 2) @default(0)
+  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime      @default(now())
+
+  @@unique([tradieId, normalizedName, unit])
+  @@index([tradieId, normalizedName])
+  @@index([tradieId, unit])
+}
+
+model RateSample {
+  id             String   @id @default(uuid())
+  tradieId       String
+  tradie         TradieProfile @relation(fields: [tradieId], references: [id], onDelete: Cascade)
+  normalizedName String
+  unit           String
+  rate           Decimal  @db.Decimal(12, 2)
+  createdAt      DateTime @default(now())
+
+  @@index([tradieId, normalizedName, unit])
 }

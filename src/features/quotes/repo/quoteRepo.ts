@@ -8,6 +8,7 @@ import {
 import { calculateQuoteTotals } from "@/core/quotes/quoteCalculator";
 import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { QuoteDraft } from "@/core/ai/quoteDraftSchemas";
+import { applyRateSuggestionsToQuoteLinesAsync } from "@/features/rates/repo/rateMemoryRepo";
 const toDecimal = (value: number) => new Prisma.Decimal(value);
 
 export async function createQuoteAsync(input: QuoteCreateInput) {
@@ -51,6 +52,10 @@ export async function createQuoteAsync(input: QuoteCreateInput) {
               unit: line.unit,
               unitRate: toDecimal(line.unitRate),
               lineTotal: toDecimal(line.lineTotal),
+              suggestedUnitRate: null,
+              rateSource: null,
+              rateConfidence: null,
+              needsReview: false,
             })),
           },
         },
@@ -160,6 +165,10 @@ export async function updateQuoteAsync(id: string, input: QuoteCreateInput) {
               unit: line.unit,
               unitRate: toDecimal(line.unitRate),
               lineTotal: toDecimal(line.lineTotal),
+              suggestedUnitRate: null,
+              rateSource: null,
+              rateConfidence: null,
+              needsReview: false,
             })),
           },
         },
@@ -191,6 +200,68 @@ export async function createDraftQuoteFromLeadAsync(
     : [{ name: "Scope to be confirmed", qty: 1, unit: "job" }];
 
   const quote = await prisma.$transaction(async (tx) => {
+    const existingQuotes = await tx.quote.findMany({
+      where: { tradieId, leadId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const quoteToKeep = existingQuotes[0] ?? null;
+    const quotesToDelete = existingQuotes.slice(1);
+
+    if (quotesToDelete.length > 0) {
+      const deleteIds = quotesToDelete.map((q) => q.id);
+      await tx.quoteLine.deleteMany({ where: { quoteId: { in: deleteIds } } });
+      await tx.quote.deleteMany({ where: { id: { in: deleteIds } } });
+    }
+
+    if (quoteToKeep) {
+      // reset lines and update content on existing quote
+      await tx.quoteLine.deleteMany({ where: { quoteId: quoteToKeep.id } });
+      const updated = await tx.quote.update({
+        where: { id: quoteToKeep.id },
+        data: {
+          status: "DRAFT",
+          customerName: lead.customerName,
+          customerEmail: lead.customerEmail,
+          siteAddress: lead.siteAddress,
+          jobDescriptionRaw: lead.jobDescription,
+          trade: draft.trade ?? lead.jobCategory ?? null,
+          jobType: draft.jobType ?? null,
+          scopeBullets: draft.scopeBullets,
+          exclusions: draft.exclusions,
+          terms: {
+            depositPercent: 50,
+            validityDays: 14,
+            notes: (draft.missingInfoQuestions ?? [])
+              .map((q) => `- ${q}`)
+              .join("\n"),
+          },
+          includeGst: true,
+          subTotal: toDecimal(0),
+          gstAmount: toDecimal(0),
+          total: toDecimal(0),
+          lines: {
+            createMany: {
+              data: lineItems.map((line) => ({
+                name: line.name,
+                category: lead.jobCategory ?? "General",
+                qty: toDecimal(line.qty ?? 0),
+                unit: line.unit,
+                unitRate: toDecimal(0),
+                suggestedUnitRate: null,
+                rateSource: null,
+                rateConfidence: null,
+                needsReview: false,
+                lineTotal: toDecimal(0),
+              })),
+            },
+          },
+        },
+        include: { lines: true },
+      });
+      return updated;
+    }
+
     const createdQuote = await tx.quote.create({
       data: {
         tradieId,
@@ -223,6 +294,10 @@ export async function createDraftQuoteFromLeadAsync(
               qty: toDecimal(line.qty ?? 0),
               unit: line.unit,
               unitRate: toDecimal(0),
+              suggestedUnitRate: null,
+              rateSource: null,
+              rateConfidence: null,
+              needsReview: false,
               lineTotal: toDecimal(0),
             })),
           },
@@ -234,5 +309,10 @@ export async function createDraftQuoteFromLeadAsync(
     return createdQuote;
   });
 
-  return quote;
+  await applyRateSuggestionsToQuoteLinesAsync(tradieId, quote.id);
+
+  return prisma.quote.findUnique({
+    where: { id: quote.id },
+    include: { lines: true },
+  });
 }

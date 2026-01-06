@@ -8,9 +8,16 @@ type QuoteFormProps = {
   initial?: QuoteCreateInput;
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
+  lineMeta?: Array<{
+    suggestedUnitRate?: number | null;
+    rateConfidence?: number | null;
+    rateSource?: string | null;
+    needsReview?: boolean | null;
+    autoApplied?: boolean | null;
+  }>;
 };
 
-export function QuoteForm({ initial, action, submitLabel }: QuoteFormProps) {
+export function QuoteForm({ initial, action, submitLabel, lineMeta }: QuoteFormProps) {
   const [includeGst, setIncludeGst] = useState<boolean>(initial?.includeGst ?? true);
   const [scopeText, setScopeText] = useState<string>(
     (initial?.scopeBullets ?? []).join("\n")
@@ -146,32 +153,44 @@ export function QuoteForm({ initial, action, submitLabel }: QuoteFormProps) {
             <label className="text-sm font-medium text-gray-800">Scope</label>
             <span className="text-xs text-gray-500">One bullet per line</span>
           </div>
-          <textarea
-            name="scopeText"
-            rows={5}
-            value={scopeText}
-            onChange={(e) => setScopeText(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-            placeholder="- Demo scope line"
-          />
+          <div className="rounded-lg border border-gray-200 bg-gray-50">
+            <textarea
+              name="scopeText"
+              rows={6}
+              value={scopeText}
+              onChange={(e) => setScopeText(e.target.value)}
+              className="w-full rounded-lg border-0 bg-transparent px-3 py-2 text-sm focus:border-black focus:outline-none"
+              placeholder="- Demo scope line"
+              aria-describedby="scope-help"
+            />
+          </div>
+          <p id="scope-help" className="text-xs text-gray-500">
+            Separate bullets with new lines. These are shown to customers in the quote summary.
+          </p>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-800">Exclusions</label>
             <span className="text-xs text-gray-500">One bullet per line</span>
           </div>
-          <textarea
-            name="exclusionsText"
-            rows={5}
-            value={exclusionsText}
-            onChange={(e) => setExclusionsText(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-            placeholder="- Demo exclusion line"
-          />
+          <div className="rounded-lg border border-gray-200 bg-gray-50">
+            <textarea
+              name="exclusionsText"
+              rows={6}
+              value={exclusionsText}
+              onChange={(e) => setExclusionsText(e.target.value)}
+              className="w-full rounded-lg border-0 bg-transparent px-3 py-2 text-sm focus:border-black focus:outline-none"
+              placeholder="- Demo exclusion line"
+              aria-describedby="exclusions-help"
+            />
+          </div>
+          <p id="exclusions-help" className="text-xs text-gray-500">
+            List anything not included so expectations are clear.
+          </p>
         </div>
       </div>
 
-      <QuoteLineEditor initialLines={initial?.lines} includeGst={includeGst} />
+      <QuoteLineEditor initialLines={initial?.lines} includeGst={includeGst} lineMeta={lineMeta} />
 
       <input
         type="hidden"

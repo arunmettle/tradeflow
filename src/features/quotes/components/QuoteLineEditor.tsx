@@ -10,6 +10,13 @@ type QuoteLineEditorProps = {
   initialLines?: QuoteLineInput[];
   includeGst?: boolean;
   onChange?: (lines: QuoteLineInput[]) => void;
+  lineMeta?: Array<{
+    suggestedUnitRate?: number | null;
+    rateConfidence?: number | null;
+    rateSource?: string | null;
+    needsReview?: boolean | null;
+    autoApplied?: boolean | null;
+  }>;
 };
 
 const defaultLine = quoteLineInputSchema.parse({
@@ -25,28 +32,29 @@ export function QuoteLineEditor({
   initialLines,
   includeGst = true,
   onChange,
+  lineMeta,
 }: QuoteLineEditorProps) {
-  const [uncontrolledLines,   setUncontrolledLines] = useState<QuoteLineInput[]>(
+  const [uncontrolledLines, setUncontrolledLines] = useState<QuoteLineInput[]>(
     initialLines && initialLines.length > 0 ? initialLines : [defaultLine]
   );
   useEffect(() => {
     if (controlledLines) return;
     const next =
       Array.isArray(initialLines) && initialLines.length > 0 ? initialLines : [defaultLine];
-    const same =
-      uncontrolledLines.length === next.length &&
-      uncontrolledLines.every(
-        (line, idx) =>
-          line.name === next[idx].name &&
-          line.category === next[idx].category &&
-          line.qty === next[idx].qty &&
-          line.unit === next[idx].unit &&
-          line.unitRate === next[idx].unitRate
-      );
-    if (!same) {
-      setUncontrolledLines(next);
-    }
-  }, [initialLines, controlledLines, uncontrolledLines]);
+    setUncontrolledLines((prev) => {
+      const same =
+        prev.length === next.length &&
+        prev.every(
+          (line, idx) =>
+            line.name === next[idx].name &&
+            line.category === next[idx].category &&
+            line.qty === next[idx].qty &&
+            line.unit === next[idx].unit &&
+            line.unitRate === next[idx].unitRate
+        );
+      return same ? prev : next;
+    });
+  }, [initialLines, controlledLines]);
 
   const lines = controlledLines ?? uncontrolledLines;
 
@@ -120,80 +128,120 @@ export function QuoteLineEditor({
       </div>
 
       <div className="space-y-3">
-        {totals.map((line, index) => (
-          <div key={index} className="space-y-3 rounded-lg border border-gray-200 p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 space-y-2">
-                <input
-                  name={`lines[${index}][name]`}
-                  value={line.name}
-                  onChange={(e) => handleChange(index, "name", e.target.value)}
-                  placeholder="Item name"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-                  required
-                />
-                <input
-                  name={`lines[${index}][category]`}
-                  value={line.category}
-                  onChange={(e) => handleChange(index, "category", e.target.value)}
-                  placeholder="Category"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => removeLine(index)}
-                className="text-sm font-medium text-gray-500 hover:text-red-600"
-                disabled={lines.length === 1}
-                aria-label="Remove line"
-              >
-                Remove
-              </button>
-            </div>
+        {totals.map((line, index) => {
+          const meta = lineMeta?.[index];
+          const suggested =
+            meta?.suggestedUnitRate !== undefined && meta?.suggestedUnitRate !== null
+              ? Number(meta.suggestedUnitRate)
+              : null;
+          const confidence =
+            meta?.rateConfidence !== undefined && meta?.rateConfidence !== null
+              ? Number(meta.rateConfidence)
+              : null;
+          const autoApplied = meta?.autoApplied ?? false;
+          const needsReview = meta?.needsReview ?? false;
+          const rateSource = meta?.rateSource ?? null;
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Qty</label>
-                <input
-                  name={`lines[${index}][qty]`}
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  value={line.qty}
-                  onChange={(e) => handleChange(index, "qty", Number(e.target.value))}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-                />
+          return (
+            <div
+              key={index}
+              className={`space-y-3 rounded-lg border border-gray-200 p-3 ${
+                needsReview ? "bg-amber-50" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {autoApplied && (
+                      <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
+                        Auto-priced
+                      </span>
+                    )}
+                    {needsReview && (
+                      <span className="rounded-full bg-amber-200 px-2 py-1 text-xs font-semibold text-amber-900">
+                        Needs review
+                      </span>
+                    )}
+                    {suggested !== null && line.unitRate === 0 && (
+                      <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
+                        Suggested ${suggested.toFixed(2)}
+                        {confidence ? ` (${confidence}%` : ""}
+                        {rateSource ? ` • ${rateSource.replace("_", " ")}` : ""}
+                        {confidence ? ")" : ""}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    name={`lines[${index}][name]`}
+                    value={line.name}
+                    onChange={(e) => handleChange(index, "name", e.target.value)}
+                    placeholder="Item name"
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                    required
+                  />
+                  <input
+                    name={`lines[${index}][category]`}
+                    value={line.category}
+                    onChange={(e) => handleChange(index, "category", e.target.value)}
+                    placeholder="Category"
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeLine(index)}
+                  className="text-sm font-medium text-gray-500 hover:text-red-600"
+                  disabled={lines.length === 1}
+                  aria-label="Remove line"
+                >
+                  Remove
+                </button>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Unit</label>
-                <input
-                  name={`lines[${index}][unit]`}
-                  value={line.unit}
-                  onChange={(e) => handleChange(index, "unit", e.target.value)}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Unit rate</label>
-                <input
-                  name={`lines[${index}][unitRate]`}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={line.unitRate}
-                  onChange={(e) => handleChange(index, "unitRate", Number(e.target.value))}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Line total</label>
-                <div className="flex h-[42px] items-center rounded-md border border-gray-100 bg-gray-50 px-3 text-sm font-semibold text-gray-900">
-                  ${line.lineTotal.toFixed(2)}
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Qty</label>
+                  <input
+                    name={`lines[${index}][qty]`}
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    value={line.qty}
+                    onChange={(e) => handleChange(index, "qty", Number(e.target.value))}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Unit</label>
+                  <input
+                    name={`lines[${index}][unit]`}
+                    value={line.unit}
+                    onChange={(e) => handleChange(index, "unit", e.target.value)}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Unit rate</label>
+                  <input
+                    name={`lines[${index}][unitRate]`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={Number(line.unitRate).toString()}
+                    onChange={(e) => handleChange(index, "unitRate", Number(e.target.value))}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Line total</label>
+                  <div className="flex h-[42px] items-center rounded-md border border-gray-100 bg-gray-50 px-3 text-sm font-semibold text-gray-900">
+                    ${line.lineTotal.toFixed(2)}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="space-y-1 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-800">

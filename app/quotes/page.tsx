@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listQuotesAsync } from "@/features/quotes/repo/quoteRepo";
+import { DeleteQuoteButton } from "@/features/quotes/components/DeleteQuoteButton";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -41,13 +42,17 @@ export default async function QuotesPageAsync() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {quotes.map((quote) => (
-            <Link
+            <div
               key={quote.id}
-              href={`/quotes/${quote.id}`}
               className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-gray-900">Quote #{quote.number}</div>
+                <Link
+                  href={`/quotes/${quote.id}`}
+                  className="text-sm font-semibold text-gray-900 hover:underline"
+                >
+                  Quote #{quote.number}
+                </Link>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[quote.status] ?? "bg-gray-100 text-gray-800"}`}
                 >
@@ -59,7 +64,16 @@ export default async function QuotesPageAsync() {
                 <div>{currency.format(Number(quote.total ?? 0))}</div>
                 <div>{formatDate(new Date(quote.createdAt))}</div>
               </div>
-            </Link>
+              <div className="flex items-center justify-end gap-3 text-sm">
+                <Link
+                  href={`/quotes/${quote.id}/edit`}
+                  className="font-semibold text-blue-700 hover:underline"
+                >
+                  Edit
+                </Link>
+                <DeleteQuoteButton quoteId={quote.id} />
+              </div>
+            </div>
           ))}
         </div>
 

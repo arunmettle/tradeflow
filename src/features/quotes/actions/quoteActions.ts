@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { QuoteCreateInput, quoteLineInputSchema } from "@/core/quotes/quoteSchemas";
 import { createQuoteAsync, updateQuoteAsync } from "../repo/quoteRepo";
+import { upsertRateMemoryFromQuoteAsync } from "@/features/rates/repo/rateMemoryRepo";
+import { revalidateQuotePaths } from "@/features/quotes/actions/revalidateQuote";
+import prisma from "@/db/prisma";
 
 type LineField = "name" | "category" | "qty" | "unit" | "unitRate";
 
@@ -92,14 +95,25 @@ const buildQuoteInputFromFormData = (formData: FormData): QuoteCreateInput => {
 export async function createQuoteActionAsync(formData: FormData) {
   const input = buildQuoteInputFromFormData(formData);
   const quote = await createQuoteAsync(input);
-  revalidatePath("/quotes");
+  await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
+  await revalidateQuotePaths(quote.id);
   redirect(`/quotes/${quote.id}`);
 }
 
 export async function updateQuoteActionAsync(id: string, formData: FormData) {
   const input = buildQuoteInputFromFormData(formData);
   const quote = await updateQuoteAsync(id, input);
-  revalidatePath("/quotes");
-  revalidatePath(`/quotes/${quote.id}`);
+  await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
+  await revalidateQuotePaths(quote.id);
   redirect(`/quotes/${quote.id}`);
+}
+
+export async function deleteQuoteActionAsync(id: string) {
+  const quote = await prisma.quote.findUnique({ where: { id } });
+  if (!quote) {
+    throw new Error("Quote not found");
+  }
+  await prisma.quote.delete({ where: { id } });
+  await revalidateQuotePaths(id);
+  redirect("/quotes");
 }
