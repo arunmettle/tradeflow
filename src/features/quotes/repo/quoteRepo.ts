@@ -6,6 +6,7 @@ import {
   quoteLineInputSchema,
 } from "@/core/quotes/quoteSchemas";
 import { calculateQuoteTotals } from "@/core/quotes/quoteCalculator";
+import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 const toDecimal = (value: number) => new Prisma.Decimal(value);
 
 export async function createQuoteAsync(input: QuoteCreateInput) {
@@ -16,6 +17,8 @@ export async function createQuoteAsync(input: QuoteCreateInput) {
   let trade = parsedInput.trade;
   let jobType = parsedInput.jobType;
 
+  const tradie = await getDefaultTradieAsync();
+
   const { normalizedLines, subTotal, gstAmount, total } = calculateQuoteTotals(
     linesInput.map((line) => quoteLineInputSchema.parse(line)),
     parsedInput.includeGst
@@ -24,6 +27,7 @@ export async function createQuoteAsync(input: QuoteCreateInput) {
   const createdQuote = await prisma.$transaction(async (tx) => {
     const quote = await tx.quote.create({
       data: {
+        tradieId: tradie.id,
         customerName: parsedInput.customerName,
         customerEmail: parsedInput.customerEmail,
         siteAddress: parsedInput.siteAddress,
@@ -62,7 +66,9 @@ export async function createQuoteAsync(input: QuoteCreateInput) {
 }
 
 export async function listQuotesAsync() {
+  const tradie = await getDefaultTradieAsync();
   return prisma.quote.findMany({
+    where: { tradieId: tradie.id },
     select: {
       id: true,
       number: true,
@@ -83,8 +89,10 @@ export async function getQuoteByIdAsync(id: string) {
 
   const isNumeric = /^[0-9]+$/.test(trimmedId);
   const asNumber = isNumeric ? Number(trimmedId) : null;
+  const tradie = await getDefaultTradieAsync();
   const quote = await prisma.quote.findFirst({
     where: {
+      tradieId: tradie.id,
       OR: [
         { id: trimmedId },
         ...(isNumeric && asNumber !== null ? [{ number: asNumber }] : []),
@@ -114,6 +122,8 @@ export async function updateQuoteAsync(id: string, input: QuoteCreateInput) {
   let trade = parsedInput.trade;
   let jobType = parsedInput.jobType;
 
+  const tradie = await getDefaultTradieAsync();
+
   const { normalizedLines, subTotal, gstAmount, total } = calculateQuoteTotals(
     linesInput.map((line) => quoteLineInputSchema.parse(line)),
     parsedInput.includeGst
@@ -126,6 +136,7 @@ export async function updateQuoteAsync(id: string, input: QuoteCreateInput) {
     const quote = await tx.quote.update({
       where: { id: trimmedId },
       data: {
+        tradieId: tradie.id,
         customerName: parsedInput.customerName,
         customerEmail: parsedInput.customerEmail,
         siteAddress: parsedInput.siteAddress,
