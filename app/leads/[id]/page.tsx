@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLeadByIdAsync } from "@/features/leads/repo/leadRepo";
+import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
 import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 type Props = {
@@ -31,9 +32,19 @@ export default async function LeadDetailPage({ params }: Props) {
             <h1 className="text-2xl font-semibold text-gray-900">Lead details</h1>
             <p className="text-sm text-gray-600">Submitted on {new Date(lead.createdAt).toLocaleString()}</p>
           </div>
-          <Link href="/leads" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-            Back to leads
-          </Link>
+          <div className="flex items-center gap-3">
+            <form action={generateDraftQuoteActionAsync.bind(null, lead.id)}>
+              <button
+                type="submit"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Generate draft quote
+              </button>
+            </form>
+            <Link href="/leads" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+              Back to leads
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

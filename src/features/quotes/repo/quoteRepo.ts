@@ -7,6 +7,7 @@ import {
 } from "@/core/quotes/quoteSchemas";
 import { calculateQuoteTotals } from "@/core/quotes/quoteCalculator";
 import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { QuoteDraft } from "@/core/ai/quoteDraftSchemas";
 const toDecimal = (value: number) => new Prisma.Decimal(value);
 
 export async function createQuoteAsync(input: QuoteCreateInput) {
@@ -170,4 +171,68 @@ export async function updateQuoteAsync(id: string, input: QuoteCreateInput) {
   });
 
   return updated;
+}
+
+export async function createDraftQuoteFromLeadAsync(
+  tradieId: string,
+  leadId: string,
+  draft: QuoteDraft
+) {
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, tradieId },
+  });
+
+  if (!lead) {
+    throw new Error("Lead not found");
+  }
+
+  const lineItems = draft.lineItems?.length
+    ? draft.lineItems
+    : [{ name: "Scope to be confirmed", qty: 1, unit: "job" }];
+
+  const quote = await prisma.$transaction(async (tx) => {
+    const createdQuote = await tx.quote.create({
+      data: {
+        tradieId,
+        leadId,
+        status: "DRAFT",
+        customerName: lead.customerName,
+        customerEmail: lead.customerEmail,
+        siteAddress: lead.siteAddress,
+        jobDescriptionRaw: lead.jobDescription,
+        trade: draft.trade ?? lead.jobCategory ?? null,
+        jobType: draft.jobType ?? null,
+        scopeBullets: draft.scopeBullets,
+        exclusions: draft.exclusions,
+        terms: {
+          depositPercent: 50,
+          validityDays: 14,
+          notes: (draft.missingInfoQuestions ?? [])
+            .map((q) => `- ${q}`)
+            .join("\n"),
+        },
+        includeGst: true,
+        subTotal: toDecimal(0),
+        gstAmount: toDecimal(0),
+        total: toDecimal(0),
+        lines: {
+          createMany: {
+            data: lineItems.map((line) => ({
+              name: line.name,
+              category: lead.jobCategory ?? "General",
+              qty: toDecimal(line.qty ?? 0),
+              unit: line.unit,
+              unitRate: toDecimal(0),
+              lineTotal: toDecimal(0),
+            })),
+          },
+        },
+      },
+      include: { lines: true },
+    });
+
+    return createdQuote;
+  });
+
+  return quote;
 }

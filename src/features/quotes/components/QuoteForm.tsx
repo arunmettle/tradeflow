@@ -12,6 +12,21 @@ type QuoteFormProps = {
 
 export function QuoteForm({ initial, action, submitLabel }: QuoteFormProps) {
   const [includeGst, setIncludeGst] = useState<boolean>(initial?.includeGst ?? true);
+  const [scopeText, setScopeText] = useState<string>(
+    (initial?.scopeBullets ?? []).join("\n")
+  );
+  const [exclusionsText, setExclusionsText] = useState<string>(
+    (initial?.exclusions ?? []).join("\n")
+  );
+
+  const scopeBullets = scopeText
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  const exclusions = exclusionsText
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
   return (
     <form action={action} className="space-y-6">
@@ -125,17 +140,48 @@ export function QuoteForm({ initial, action, submitLabel }: QuoteFormProps) {
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-800">Scope</label>
+            <span className="text-xs text-gray-500">One bullet per line</span>
+          </div>
+          <textarea
+            name="scopeText"
+            rows={5}
+            value={scopeText}
+            onChange={(e) => setScopeText(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+            placeholder="- Demo scope line"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-800">Exclusions</label>
+            <span className="text-xs text-gray-500">One bullet per line</span>
+          </div>
+          <textarea
+            name="exclusionsText"
+            rows={5}
+            value={exclusionsText}
+            onChange={(e) => setExclusionsText(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+            placeholder="- Demo exclusion line"
+          />
+        </div>
+      </div>
+
       <QuoteLineEditor initialLines={initial?.lines} includeGst={includeGst} />
 
       <input
         type="hidden"
         name="scopeBullets"
-        value={JSON.stringify(initial?.scopeBullets ?? [])}
+        value={JSON.stringify(scopeBullets)}
       />
       <input
         type="hidden"
         name="exclusions"
-        value={JSON.stringify(initial?.exclusions ?? [])}
+        value={JSON.stringify(exclusions)}
       />
 
       <div className="pt-2">
