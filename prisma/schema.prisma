@@ -16,10 +16,49 @@ enum QuoteStatus {
   DECLINED
 }
 
+model TradieProfile {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  businessName  String
+  email         String?
+  phone         String?
+  logoUrl       String?
+  brandSettings Json     @default("{}")
+  plan          String   @default("FREE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  quotes        Quote[]
+  leads         Lead[]
+}
+
+model Lead {
+  id             String         @id @default(uuid())
+  tradieId       String
+  tradie         TradieProfile  @relation(fields: [tradieId], references: [id], onDelete: Cascade)
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  siteAddress    String?
+  suburb         String?
+  jobCategory    String?
+  jobDescription String
+  photos         Json           @default("[]")
+  status         String         @default("NEW")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  quotes         Quote[]
+
+  @@index([tradieId, status, createdAt])
+}
+
 model Quote {
   id             String          @id @default(uuid())
   number         Int             @unique @default(autoincrement())
   status         QuoteStatus     @default(DRAFT)
+  tradieId       String
+  tradie         TradieProfile   @relation(fields: [tradieId], references: [id], onDelete: Cascade)
+  leadId         String?
+  lead           Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
   customerName   String
   customerEmail  String?
   siteAddress    String?
@@ -38,7 +77,7 @@ model Quote {
   lines          QuoteLine[]
   publicLinks    QuotePublicLink[]
 
-  @@index([status, createdAt])
+  @@index([tradieId, status, createdAt])
 }
 
 model QuoteLine {
