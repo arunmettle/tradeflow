@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+}
+
+model Quote {
+  id             String          @id @default(uuid())
+  number         Int             @unique @default(autoincrement())
+  status         QuoteStatus     @default(DRAFT)
+  customerName   String
+  customerEmail  String?
+  siteAddress    String?
+  jobDescriptionRaw String
+  trade          String?
+  jobType        String?
+  scopeBullets   Json
+  exclusions     Json
+  terms          Json
+  includeGst     Boolean         @default(true)
+  subTotal       Decimal         @db.Decimal(12, 2) @default(0)
+  gstAmount      Decimal         @db.Decimal(12, 2) @default(0)
+  total          Decimal         @db.Decimal(12, 2) @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  lines          QuoteLine[]
+  publicLinks    QuotePublicLink[]
+
+  @@index([status, createdAt])
+}
+
+model QuoteLine {
+  id        String   @id @default(uuid())
+  quoteId   String
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name      String
+  category  String
+  qty       Decimal  @db.Decimal(12, 3) @default(1)
+  unit      String
+  unitRate  Decimal  @db.Decimal(12, 2) @default(0)
+  lineTotal Decimal  @db.Decimal(12, 2) @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quoteId])
+}
+
+model QuotePublicLink {
+  id            String   @id @default(uuid())
+  quoteId       String
+  quote         Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  token         String   @unique
+  expiresAt     DateTime?
+  acceptedAt    DateTime?
+  declinedAt    DateTime?
+  declineReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([quoteId])
+}
