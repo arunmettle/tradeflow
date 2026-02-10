@@ -28,7 +28,11 @@ export async function createLeadActionAsync(slug: string, formData: FormData) {
   redirect(`/t/${tradie.slug}/success`);
 }
 
-export async function deleteLeadActionAsync(leadId: string, _formData: FormData) {
+export async function deleteLeadActionAsync(formData: FormData) {
+  const leadId = formData.get("leadId")?.toString().trim();
+  if (!leadId) {
+    throw new Error("Lead id is required");
+  }
   const tradie = await getCurrentTradieAsync();
   await deleteLeadAsync(tradie.id, leadId);
   revalidatePath("/leads");

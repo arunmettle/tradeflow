@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { getLeadByIdAsync } from "@/features/leads/repo/leadRepo";
 import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
-import { deleteLeadActionAsync } from "@/features/leads/actions/leadActions";
-import { ConfirmDialogForm } from "@/components/ConfirmDialogForm";
+import { DeleteLeadButton } from "@/features/leads/components/DeleteLeadButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -43,15 +42,9 @@ export default async function LeadDetailPage({ params }: Props) {
                 Generate draft quote
               </button>
             </form>
-            <ConfirmDialogForm
-              action={deleteLeadActionAsync.bind(null, lead.id)}
-              title="Delete lead?"
-              description="This removes the lead from your list. Any existing quotes will be kept."
-              triggerLabel="Delete"
+            <DeleteLeadButton
+              leadId={lead.id}
               triggerClassName="w-full rounded-md border border-red-200 bg-red-50 px-4 py-2 text-center text-sm font-semibold text-red-700 hover:bg-red-100 sm:w-auto"
-              confirmLabel="Delete lead"
-              confirmClassName="bg-red-600 hover:bg-red-700 text-white"
-              cancelLabel="Keep lead"
             />
             <Link
               href="/leads"
