@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 type PendingSubmitButtonProps = {
   label: string;
@@ -19,35 +19,27 @@ export function PendingSubmitButton({
   showSpinner = true,
 }: PendingSubmitButtonProps) {
   const { pending } = useFormStatus();
-  const [locked, setLocked] = useState(false);
   const clickedRef = useRef(false);
-  const disabled = pending || locked;
-
-  // If the server action errors and the form becomes idle again, re-enable.
+  // Reset click-guard when the form is idle again (after submit completes/errors).
   useEffect(() => {
-    if (!pending) {
-      setLocked(false);
-      clickedRef.current = false;
-    }
+    if (!pending) clickedRef.current = false;
   }, [pending]);
 
   return (
     <button
       type="submit"
-      disabled={disabled}
+      disabled={pending}
       className={className}
       style={style}
-      aria-busy={disabled}
+      aria-busy={pending}
       aria-live="polite"
       onClick={(e) => {
-        // Prevent double-submits, but don't block the initial submit.
-        if (clickedRef.current) {
+        // Prevent double-click submits before `pending` flips true.
+        if (pending || clickedRef.current) {
           e.preventDefault();
           return;
         }
         clickedRef.current = true;
-        // Defer disabling until after the browser has a chance to submit.
-        window.setTimeout(() => setLocked(true), 0);
       }}
     >
       <span className="inline-flex items-center justify-center gap-2">

@@ -61,6 +61,29 @@ class StubDraftService implements QuoteDraftService {
   }
 }
 
+type UnknownRecord = Record<string, unknown>;
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function getErrorStatus(err: unknown): number | undefined {
+  if (!isRecord(err)) return undefined;
+  const direct = err["status"];
+  if (typeof direct === "number") return direct;
+  const response = err["response"];
+  if (isRecord(response) && typeof response["status"] === "number") return response["status"];
+  return undefined;
+}
+
+function getErrorCode(err: unknown): string | undefined {
+  if (!isRecord(err)) return undefined;
+  const direct = err["code"];
+  if (typeof direct === "string") return direct;
+  const nested = err["error"];
+  if (isRecord(nested) && typeof nested["code"] === "string") return nested["code"];
+  return undefined;
+}
+
 async function tryCreateOpenAIService(): Promise<QuoteDraftService | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -97,9 +120,6 @@ async function tryCreateOpenAIService(): Promise<QuoteDraftService | null> {
 
           const raw = completion.output[0].content[0].text;
           const parsed = JSON.parse(raw);
-          console.log("Parsed AI Response:")
-          console.log(parsed);
-          
           return quoteDraftSchema.parse(parsed);
         } catch (err) {
           console.error("[quote-draft] OpenAI request failed", err);
@@ -114,11 +134,39 @@ async function tryCreateOpenAIService(): Promise<QuoteDraftService | null> {
 }
 
 export async function getQuoteDraftService(): Promise<QuoteDraftService> {
+  const stub = new StubDraftService();
   const openAIService = await tryCreateOpenAIService();
   if (openAIService) {
     console.log("[quote-draft] Using OpenAI draft service");
-    return openAIService;
+    // Resilient wrapper: if OpenAI is misconfigured (e.g. invalid API key) we
+    // fall back to a deterministic stub so quote generation never hard-fails.
+    return {
+      async draftQuoteAsync(input: DraftContext): Promise<QuoteDraft> {
+        try {
+          return await openAIService.draftQuoteAsync(input);
+        } catch (err) {
+          const status = getErrorStatus(err);
+          const code = getErrorCode(err);
+          console.warn("[quote-draft] Falling back to stub draft service", {
+            status,
+            code,
+          });
+
+          const draft = await stub.draftQuoteAsync(input);
+          if (status === 401 || code === "invalid_api_key") {
+            return quoteDraftSchema.parse({
+              ...draft,
+              missingInfoQuestions: [
+                ...(draft.missingInfoQuestions ?? []),
+                "AI draft unavailable (invalid OPENAI_API_KEY). Using a basic draft.",
+              ],
+            });
+          }
+          return draft;
+        }
+      },
+    };
   }
   console.log("[quote-draft] Using stub draft service");
-  return new StubDraftService();
+  return stub;
 }
