@@ -35,44 +35,51 @@ export function AppTopNav({ user }: Props) {
 
   return (
     <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/quotes" className="text-sm font-semibold text-slate-900">
-          TradeFlow
-        </Link>
+      <div className="mx-auto w-full max-w-6xl px-4 py-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/quotes" className="text-sm font-semibold text-slate-900">
+              TradeFlow
+            </Link>
 
-        <nav aria-label="Primary" className="flex items-center gap-2">
-          <Link
-            href="/quotes"
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-          >
-            Quotes
-          </Link>
-          <Link
-            href="/leads"
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-          >
-            Leads
-          </Link>
-          <Link
-            href="/profile"
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-          >
-            Profile
-          </Link>
-        </nav>
+            <div className="flex items-center gap-3">
+              <span className="hidden text-xs text-slate-500 sm:inline">
+                {user.name || user.email || "Signed in"}
+              </span>
+              <form action={signOutActionAsync}>
+                <button
+                  type="submit"
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Sign out
+                </button>
+              </form>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-slate-500 sm:inline">
-            {user.name || user.email || "Signed in"}
-          </span>
-          <form action={signOutActionAsync}>
-            <button
-              type="submit"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          <nav
+            aria-label="Primary"
+            className="-mx-1 flex w-full items-center gap-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:px-0 sm:pb-0"
+          >
+            <Link
+              href="/quotes"
+              className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
-              Sign out
-            </button>
-          </form>
+              Quotes
+            </Link>
+            <Link
+              href="/leads"
+              className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Leads
+            </Link>
+            <Link
+              href="/profile"
+              className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Profile
+            </Link>
+          </nav>
         </div>
       </div>
     </header>

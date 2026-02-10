@@ -243,10 +243,10 @@ export default async function TradiePage() {
             <p className="text-xs text-gray-500">One per line: Project title | Suburb | Summary</p>
           </section>
 
-          <div className="flex justify-end border-t border-gray-100 pt-4">
+          <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <button
               type="submit"
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
             >
               Save profile
             </button>

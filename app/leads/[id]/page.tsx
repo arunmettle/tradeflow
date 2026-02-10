@@ -15,16 +15,16 @@ export default async function LeadDetailPage({ params }: Props) {
   if (!lead) return notFound();
 
   const infoRow = (label: string, value?: string | null) => (
-    <div className="flex justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
+    <div className="flex flex-col gap-1 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <span className="text-gray-600">{label}</span>
-      <span className="font-semibold text-gray-900">{value ?? "—"}</span>
+      <span className="break-words font-semibold text-gray-900 sm:text-right">{value ?? "—"}</span>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
               {tradie.businessName}
@@ -32,16 +32,19 @@ export default async function LeadDetailPage({ params }: Props) {
             <h1 className="text-2xl font-semibold text-gray-900">Lead details</h1>
             <p className="text-sm text-gray-600">Submitted on {new Date(lead.createdAt).toLocaleString()}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
             <form action={generateDraftQuoteActionAsync.bind(null, lead.id)}>
               <button
                 type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
               >
                 Generate draft quote
               </button>
             </form>
-            <Link href="/leads" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+            <Link
+              href="/leads"
+              className="rounded-md border border-blue-100 bg-blue-50 px-4 py-2 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            >
               Back to leads
             </Link>
           </div>

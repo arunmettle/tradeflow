@@ -42,7 +42,7 @@ export default async function QuoteDetailPageAsync({
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Quote</p>
             <h1 className="text-2xl font-semibold text-gray-900">
@@ -50,7 +50,7 @@ export default async function QuoteDetailPageAsync({
             </h1>
             <p className="text-sm text-gray-600">{quote?.trade} · {quote?.jobType}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/quotes"
               className="text-sm font-semibold text-gray-700 underline-offset-4 hover:underline"
@@ -84,7 +84,41 @@ export default async function QuoteDetailPageAsync({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        {/* Mobile line items */}
+        <div className="grid gap-3 sm:hidden">
+          {quote?.lines.map((line) => (
+            <div key={line.id} className="rounded-xl border border-gray-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-gray-900">{line.name}</div>
+                  <div className="truncate text-xs text-gray-500">{line.category}</div>
+                </div>
+                <div className="shrink-0 text-sm font-semibold text-gray-900">
+                  {currency.format(Number(line.lineTotal ?? 0))}
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-lg bg-gray-50 p-2">
+                  <div className="text-gray-500">Qty</div>
+                  <div className="mt-0.5 font-medium text-gray-900">{Number(line.qty)}</div>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-2">
+                  <div className="text-gray-500">Unit</div>
+                  <div className="mt-0.5 font-medium text-gray-900">{line.unit}</div>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-2">
+                  <div className="text-gray-500">Rate</div>
+                  <div className="mt-0.5 font-medium text-gray-900">
+                    {currency.format(Number(line.unitRate))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop/tablet line items */}
+        <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white sm:block">
           <div className="grid grid-cols-6 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">
             <div className="col-span-2">Item</div>
             <div>Qty</div>
