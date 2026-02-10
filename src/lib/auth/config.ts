@@ -12,6 +12,10 @@ export function getSupabaseAuthConfig() {
 }
 
 export function getAppBaseUrl() {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin.replace(/\/$/, "");
+  }
+
   const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
   return "http://localhost:3000";
