@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { leadCreateInputSchema } from "@/core/leads/leadSchemas";
 import { getTradieBySlugAsync } from "@/features/tradie/repo/tradieRepo";
 import { createLeadAsync } from "../repo/leadRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { deleteLeadAsync } from "../repo/leadRepo";
+import { revalidatePath } from "next/cache";
 
 export async function createLeadActionAsync(slug: string, formData: FormData) {
   const tradie = await getTradieBySlugAsync(slug);
@@ -23,4 +26,11 @@ export async function createLeadActionAsync(slug: string, formData: FormData) {
 
   await createLeadAsync(tradie.id, parsed);
   redirect(`/t/${tradie.slug}/success`);
+}
+
+export async function deleteLeadActionAsync(leadId: string, _formData: FormData) {
+  const tradie = await getCurrentTradieAsync();
+  await deleteLeadAsync(tradie.id, leadId);
+  revalidatePath("/leads");
+  redirect("/leads?deleted=1");
 }

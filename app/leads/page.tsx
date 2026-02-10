@@ -2,6 +2,8 @@ import Link from "next/link";
 import { listLeadsAsync } from "@/features/leads/repo/leadRepo";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { LeadDraftActions } from "@/features/leads/components/LeadDraftActions";
+import { deleteLeadActionAsync } from "@/features/leads/actions/leadActions";
+import { ConfirmDialogForm } from "@/components/ConfirmDialogForm";
 
 export default async function LeadsPage() {
   const tradie = await getCurrentTradieAsync();
@@ -71,12 +73,23 @@ export default async function LeadsPage() {
 
                     <div className="mt-3 flex items-center justify-between gap-3">
                       <LeadDraftActions leadId={lead.id} hasDraftQuote={hasDraftQuote} />
-                      <Link
-                        href={`/leads/${lead.id}`}
-                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                      >
-                        Open
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <ConfirmDialogForm
+                          action={deleteLeadActionAsync.bind(null, lead.id)}
+                          title="Delete lead?"
+                          description="This removes the lead from your list. Any existing quotes will be kept."
+                          triggerLabel="Delete"
+                          triggerClassName="text-sm font-semibold text-red-600 hover:text-red-700"
+                          confirmLabel="Delete lead"
+                          confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+                        />
+                        <Link
+                          href={`/leads/${lead.id}`}
+                          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                          Open
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );
@@ -85,13 +98,14 @@ export default async function LeadsPage() {
 
             {/* Desktop/tablet table */}
             <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:block">
-              <div className="grid grid-cols-8 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">
+              <div className="grid grid-cols-9 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">
                 <div className="col-span-2">Customer</div>
                 <div>Suburb</div>
                 <div>Job category</div>
                 <div>Status</div>
                 <div>Date</div>
                 <div className="text-right">Draft quote</div>
+                <div className="text-right">Delete</div>
                 <div className="text-right">View</div>
               </div>
               <div className="divide-y divide-gray-100">
@@ -100,7 +114,7 @@ export default async function LeadsPage() {
                   const hasDraftQuote = latestQuote?.status === "DRAFT";
 
                   return (
-                    <div key={lead.id} className="grid grid-cols-8 items-center px-4 py-3 text-sm">
+                    <div key={lead.id} className="grid grid-cols-9 items-center px-4 py-3 text-sm">
                       <div className="col-span-2">
                         <div className="font-semibold text-gray-900">{lead.customerName}</div>
                         <div className="text-xs text-gray-600">{lead.customerEmail}</div>
@@ -117,6 +131,17 @@ export default async function LeadsPage() {
                       </div>
                       <div className="text-right">
                         <LeadDraftActions leadId={lead.id} hasDraftQuote={hasDraftQuote} />
+                      </div>
+                      <div className="text-right">
+                        <ConfirmDialogForm
+                          action={deleteLeadActionAsync.bind(null, lead.id)}
+                          title="Delete lead?"
+                          description="This removes the lead from your list. Any existing quotes will be kept."
+                          triggerLabel="Delete"
+                          triggerClassName="text-sm font-semibold text-red-600 hover:text-red-700"
+                          confirmLabel="Delete lead"
+                          confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+                        />
                       </div>
                       <div className="text-right">
                         <Link

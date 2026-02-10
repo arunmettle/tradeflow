@@ -61,3 +61,19 @@ export async function updateLeadStatusAsync(tradieId: string, id: string, status
 
   return prisma.lead.findFirst({ where: { id: trimmed, tradieId } });
 }
+
+export async function deleteLeadAsync(tradieId: string, id: string) {
+  const trimmed = id?.toString().trim();
+  if (!trimmed) throw new Error("Lead id is required");
+
+  // Quotes referencing this lead will be preserved; Quote.leadId is onDelete: SetNull.
+  const deleted = await prisma.lead.deleteMany({
+    where: { id: trimmed, tradieId },
+  });
+
+  if (deleted.count === 0) {
+    throw new Error("Lead not found");
+  }
+
+  return trimmed;
+}
