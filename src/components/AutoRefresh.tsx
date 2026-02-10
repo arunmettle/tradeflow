@@ -16,6 +16,9 @@ export function AutoRefresh({ intervalMs = 6000, enabled = true }: AutoRefreshPr
 
     const timer = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
+      // Avoid interrupting server actions (e.g. Save/Send) which can leave UI
+      // stuck in a pending state if a refresh races the submission.
+      if (document.querySelector('[aria-busy="true"]')) return;
       router.refresh();
     }, intervalMs);
 
