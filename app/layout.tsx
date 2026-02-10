@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getCurrentAuthUserAsync } from "@/lib/auth/session";
 import { AppTopNav } from "@/components/AppTopNav";
+import { ClientProviders } from "@/components/ClientProviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,8 +32,10 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {user && <AppTopNav user={user} />}
-        {children}
+        <ClientProviders>
+          {user && <AppTopNav user={user} />}
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

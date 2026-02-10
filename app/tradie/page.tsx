@@ -1,5 +1,6 @@
 import { upsertDefaultTradieActionAsync } from "@/features/tradie/actions/tradieActions";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 
 type Testimonial = {
   name?: string;
@@ -244,12 +245,11 @@ export default async function TradiePage() {
           </section>
 
           <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
-            <button
-              type="submit"
-              className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
-            >
-              Save profile
-            </button>
+            <PendingSubmitButton
+              label="Save profile"
+              pendingLabel="Saving..."
+              className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
+            />
           </div>
         </form>
 

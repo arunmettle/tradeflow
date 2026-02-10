@@ -24,5 +24,5 @@ export async function sendTradieMessageActionAsync(quoteId: string, formData: Fo
   const parsed = messageCreateSchema.parse({ body });
   await createMessageAsync(quote.id, "TRADIE", parsed.body);
   revalidatePath(`/quotes/${quoteId}/edit`);
-  redirect(`/quotes/${quoteId}/edit`);
+  redirect(`/quotes/${quoteId}/edit?toast=message_sent`);
 }

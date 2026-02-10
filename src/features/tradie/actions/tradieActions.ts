@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { upsertCurrentTradieAsync } from "../repo/tradieRepo";
 
 const splitCommaList = (value: FormDataEntryValue | null) =>
@@ -68,4 +69,6 @@ export async function upsertDefaultTradieActionAsync(formData: FormData) {
 
   revalidatePath("/tradie");
   revalidatePath("/profile");
+
+  redirect("/tradie?toast=profile_saved");
 }

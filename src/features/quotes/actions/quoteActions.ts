@@ -104,7 +104,7 @@ export async function createQuoteActionAsync(formData: FormData) {
   const quote = await createQuoteAsync(tradie.id, input);
   await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
   await revalidateQuotePaths(quote.id);
-  redirect(`/quotes/${quote.id}`);
+  redirect(`/quotes/${quote.id}?created=1`);
 }
 
 export async function updateQuoteActionAsync(id: string, formData: FormData) {
@@ -124,12 +124,12 @@ export async function deleteQuoteActionAsync(id: string) {
   }
   await prisma.quote.delete({ where: { id: quote.id } });
   await revalidateQuotePaths(id);
-  redirect("/quotes");
+  redirect("/quotes?deleted=1");
 }
 
 export async function createPublicLinkActionAsync(quoteId: string) {
   const tradie = await getCurrentTradieAsync();
   const token = await createPublicLinkAsync(tradie.id, quoteId);
   revalidatePath(`/quotes/${quoteId}/edit`);
-  redirect(`/quotes/${quoteId}/edit?token=${encodeURIComponent(token)}`);
+  redirect(`/quotes/${quoteId}/edit?token=${encodeURIComponent(token)}&toast=quote_link_ready`);
 }
