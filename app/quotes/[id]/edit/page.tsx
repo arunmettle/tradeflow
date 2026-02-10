@@ -323,12 +323,11 @@ export default async function EditQuotePageAsync({
           </div>
 
           <div>
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-            >
-              Save changes
-            </button>
+            <PendingSubmitButton
+              label="Save changes"
+              pendingLabel="Saving..."
+              className="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-70"
+            />
           </div>
         </form>
       </div>
