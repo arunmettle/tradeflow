@@ -16,7 +16,7 @@ export interface QuoteDraftService {
 
 class StubDraftService implements QuoteDraftService {
   async draftQuoteAsync(input: DraftContext): Promise<QuoteDraft> {
-    const { lead, tradieName } = input;
+    const { lead } = input;
     const cat = (lead.jobCategory ?? "").trim();
     const description = lead.jobDescription?.trim() ?? "";
 

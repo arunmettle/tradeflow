@@ -22,6 +22,17 @@ export async function createLeadAsync(tradieId: string, input: LeadCreateInput) 
 export async function listLeadsAsync(tradieId: string) {
   return prisma.lead.findMany({
     where: { tradieId },
+    include: {
+      quotes: {
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 }

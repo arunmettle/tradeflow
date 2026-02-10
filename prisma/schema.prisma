@@ -18,11 +18,24 @@ enum QuoteStatus {
 
 model TradieProfile {
   id            String   @id @default(uuid())
+  authUserId    String?  @unique
   slug          String   @unique
   businessName  String
+  tagline       String?
+  about         String?
   email         String?
   phone         String?
   logoUrl       String?
+  website       String?
+  addressLine1  String?
+  addressLine2  String?
+  suburb        String?
+  state         String?
+  postcode      String?
+  services      Json     @default("[]")
+  serviceAreas  Json     @default("[]")
+  testimonials  Json     @default("[]")
+  projects      Json     @default("[]")
   brandSettings Json     @default("{}")
   plan          String   @default("FREE")
   createdAt     DateTime @default(now())
@@ -61,6 +74,12 @@ model Quote {
   tradie         TradieProfile   @relation(fields: [tradieId], references: [id], onDelete: Cascade)
   leadId         String?
   lead           Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  currentRevision Int            @default(1)
+  lastCustomerMessageAt DateTime?
+  lastTradieMessageAt DateTime?
+  lastCustomerReadAt DateTime?
+  lastTradieReadAt DateTime?
+  isConversationLocked Boolean   @default(false)
   customerName   String
   customerEmail  String?
   siteAddress    String?
@@ -78,6 +97,8 @@ model Quote {
   updatedAt      DateTime        @updatedAt
   lines          QuoteLine[]
   publicLinks    QuotePublicLink[]
+  messages       QuoteMessage[]
+  revisions      QuoteRevision[]
 
   @@index([tradieId, status, createdAt])
 }
@@ -115,6 +136,30 @@ model QuotePublicLink {
   updatedAt     DateTime @updatedAt
 
   @@index([quoteId])
+}
+
+model QuoteMessage {
+  id         String   @id @default(uuid())
+  quoteId    String
+  quote      Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  authorType String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([quoteId, createdAt])
+}
+
+model QuoteRevision {
+  id             String   @id @default(uuid())
+  quoteId        String
+  quote          Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  revisionNumber Int
+  summary        String?
+  snapshot       Json
+  createdAt      DateTime @default(now())
+
+  @@unique([quoteId, revisionNumber])
+  @@index([quoteId, createdAt])
 }
 
 model RateMemory {

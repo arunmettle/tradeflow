@@ -3,9 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { QuoteCreateInput, quoteLineInputSchema } from "@/core/quotes/quoteSchemas";
-import { createQuoteAsync, updateQuoteAsync } from "../repo/quoteRepo";
+import { mapQuoteUpdateFormDataToInput } from "@/core/quotes/formMapping";
+import {
+  createPublicLinkAsync,
+  createQuoteAsync,
+  updateQuoteAsync,
+} from "../repo/quoteRepo";
 import { upsertRateMemoryFromQuoteAsync } from "@/features/rates/repo/rateMemoryRepo";
 import { revalidateQuotePaths } from "@/features/quotes/actions/revalidateQuote";
+import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import prisma from "@/db/prisma";
 
 type LineField = "name" | "category" | "qty" | "unit" | "unitRate";
@@ -101,11 +107,12 @@ export async function createQuoteActionAsync(formData: FormData) {
 }
 
 export async function updateQuoteActionAsync(id: string, formData: FormData) {
-  const input = buildQuoteInputFromFormData(formData);
-  const quote = await updateQuoteAsync(id, input);
+  const tradie = await getDefaultTradieAsync();
+  const input = mapQuoteUpdateFormDataToInput(formData);
+  const quote = await updateQuoteAsync(tradie.id, id, input);
   await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
-  await revalidateQuotePaths(quote.id);
-  redirect(`/quotes/${quote.id}`);
+  revalidatePath(`/quotes/${quote.id}/edit`);
+  redirect(`/quotes/${quote.id}/edit?saved=1`);
 }
 
 export async function deleteQuoteActionAsync(id: string) {
@@ -116,4 +123,11 @@ export async function deleteQuoteActionAsync(id: string) {
   await prisma.quote.delete({ where: { id } });
   await revalidateQuotePaths(id);
   redirect("/quotes");
+}
+
+export async function createPublicLinkActionAsync(quoteId: string) {
+  const tradie = await getDefaultTradieAsync();
+  const token = await createPublicLinkAsync(tradie.id, quoteId);
+  revalidatePath(`/quotes/${quoteId}/edit`);
+  redirect(`/quotes/${quoteId}/edit?token=${encodeURIComponent(token)}`);
 }

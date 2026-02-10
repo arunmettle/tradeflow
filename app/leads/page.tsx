@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listLeadsAsync } from "@/features/leads/repo/leadRepo";
-import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
 import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { LeadDraftActions } from "@/features/leads/components/LeadDraftActions";
 
 export default async function LeadsPage() {
   const tradie = await getDefaultTradieAsync();
@@ -35,6 +35,17 @@ export default async function LeadsPage() {
             )}
             {leads.map((lead) => (
               <div key={lead.id} className="grid grid-cols-8 items-center px-4 py-3 text-sm">
+                {/*
+                  We keep one lead-row action stateful:
+                  - no draft quote -> Generate
+                  - existing draft quote -> Open draft + Regenerate (with confirm)
+                */}
+                {(() => {
+                  const latestQuote = lead.quotes[0];
+                  const hasDraftQuote = latestQuote?.status === "DRAFT";
+
+                  return (
+                    <>
                 <div className="col-span-2">
                   <div className="font-semibold text-gray-900">{lead.customerName}</div>
                   <div className="text-xs text-gray-600">{lead.customerEmail}</div>
@@ -50,14 +61,7 @@ export default async function LeadsPage() {
                   {new Date(lead.createdAt).toLocaleDateString()}
                 </div>
                 <div className="text-right">
-                  <form action={generateDraftQuoteActionAsync.bind(null, lead.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 transition hover:bg-blue-100"
-                    >
-                      Generate
-                    </button>
-                  </form>
+                  <LeadDraftActions leadId={lead.id} hasDraftQuote={hasDraftQuote} />
                 </div>
                 <div className="text-right">
                   <Link
@@ -67,6 +71,9 @@ export default async function LeadsPage() {
                     Open
                   </Link>
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>

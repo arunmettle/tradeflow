@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { calculateLineTotal } from "@/core/quotes/quoteCalculator";
 import { QuoteLineInput, quoteLineInputSchema } from "@/core/quotes/quoteSchemas";
 import { calculateQuoteTotals } from "@/core/quotes/quoteCalculator";
@@ -34,33 +34,11 @@ export function QuoteLineEditor({
   onChange,
   lineMeta,
 }: QuoteLineEditorProps) {
-  const [uncontrolledLines, setUncontrolledLines] = useState<QuoteLineInput[]>(
+  const [uncontrolledLines, setUncontrolledLines] = useState<QuoteLineInput[]>(() =>
     initialLines && initialLines.length > 0 ? initialLines : [defaultLine]
   );
-  useEffect(() => {
-    if (controlledLines) return;
-    const next =
-      Array.isArray(initialLines) && initialLines.length > 0 ? initialLines : [defaultLine];
-    setUncontrolledLines((prev) => {
-      const same =
-        prev.length === next.length &&
-        prev.every(
-          (line, idx) =>
-            line.name === next[idx].name &&
-            line.category === next[idx].category &&
-            line.qty === next[idx].qty &&
-            line.unit === next[idx].unit &&
-            line.unitRate === next[idx].unitRate
-        );
-      return same ? prev : next;
-    });
-  }, [initialLines, controlledLines]);
 
   const lines = controlledLines ?? uncontrolledLines;
-
-  useEffect(() => {
-    onChange?.(lines);
-  }, [lines, onChange]);
 
   const handleChange = <K extends keyof QuoteLineInput>(
     index: number,
@@ -72,6 +50,7 @@ export function QuoteLineEditor({
       onChange?.(next);
     } else {
       setUncontrolledLines(next);
+      onChange?.(next);
     }
   };
 
@@ -81,6 +60,7 @@ export function QuoteLineEditor({
       onChange?.(next);
     } else {
       setUncontrolledLines(next);
+      onChange?.(next);
     }
   };
 
@@ -90,6 +70,7 @@ export function QuoteLineEditor({
       onChange?.(next);
     } else {
       setUncontrolledLines(next);
+      onChange?.(next);
     }
   };
 
@@ -243,6 +224,20 @@ export function QuoteLineEditor({
           );
         })}
       </div>
+
+      <input
+        type="hidden"
+        name="linesJson"
+        value={JSON.stringify(
+          lines.map((line) => ({
+            name: line.name,
+            qty: Number(line.qty),
+            unit: line.unit,
+            unitRate: Number(line.unitRate),
+            category: line.category,
+          }))
+        )}
+      />
 
       <div className="space-y-1 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-800">
         <div className="flex items-center justify-between">

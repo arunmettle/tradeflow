@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { listQuotesAsync } from "@/features/quotes/repo/quoteRepo";
-import { DeleteQuoteButton } from "@/features/quotes/components/DeleteQuoteButton";
+import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getUnreadCustomerMessageCountsForQuotesAsync } from "@/features/messages/repo/messageRepo";
+import { AutoRefresh } from "@/components/AutoRefresh";
+
+export const dynamic = "force-dynamic";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,10 +26,18 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function QuotesPageAsync() {
-  const quotes = await listQuotesAsync();
+  const tradie = await getDefaultTradieAsync();
+  const quotes = await listQuotesAsync(tradie.id);
+  const unreadCountsByQuoteId = await getUnreadCustomerMessageCountsForQuotesAsync(
+    quotes.map((quote) => ({
+      quoteId: quote.id,
+      lastTradieMessageAt: quote.lastTradieMessageAt,
+    }))
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <AutoRefresh intervalMs={7000} />
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
@@ -41,40 +53,39 @@ export default async function QuotesPageAsync() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {quotes.map((quote) => (
-            <div
-              key={quote.id}
-              className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <div className="flex items-center justify-between">
-                <Link
-                  href={`/quotes/${quote.id}`}
-                  className="text-sm font-semibold text-gray-900 hover:underline"
-                >
-                  Quote #{quote.number}
-                </Link>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[quote.status] ?? "bg-gray-100 text-gray-800"}`}
-                >
-                  {quote.status}
-                </span>
-              </div>
-              <div className="text-base font-medium text-gray-900">{quote.customerName}</div>
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <div>{currency.format(Number(quote.total ?? 0))}</div>
-                <div>{formatDate(new Date(quote.createdAt))}</div>
-              </div>
-              <div className="flex items-center justify-end gap-3 text-sm">
-                <Link
-                  href={`/quotes/${quote.id}/edit`}
-                  className="font-semibold text-blue-700 hover:underline"
-                >
-                  Edit
-                </Link>
-                <DeleteQuoteButton quoteId={quote.id} />
-              </div>
-            </div>
-          ))}
+          {quotes.map((quote) => {
+            const unreadCount = unreadCountsByQuoteId.get(quote.id) ?? 0;
+            const hasUnreadMessages = unreadCount > 0;
+
+            return (
+              <Link
+                key={quote.id}
+                href={`/quotes/${quote.id}/edit`}
+                className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-gray-900">Quote #{quote.number}</div>
+                  <div className="flex items-center gap-2">
+                    {hasUnreadMessages && (
+                      <span className="rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-900">
+                        New message ({unreadCount})
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[quote.status] ?? "bg-gray-100 text-gray-800"}`}
+                    >
+                      {quote.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-base font-medium text-gray-900">{quote.customerName}</div>
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <div>{currency.format(Number(quote.total ?? 0))}</div>
+                  <div>{formatDate(new Date(quote.createdAt))}</div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         {quotes.length === 0 && (

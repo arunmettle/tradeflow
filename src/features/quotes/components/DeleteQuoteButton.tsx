@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { deleteQuoteActionAsync } from "@/features/quotes/actions/quoteActions";
 
@@ -13,11 +13,6 @@ type Props = {
 export function DeleteQuoteButton({ quoteId, label = "Delete", className }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleConfirm = () => {
     startTransition(async () => {
@@ -36,7 +31,7 @@ export function DeleteQuoteButton({ quoteId, label = "Delete", className }: Prop
         {pending ? "Deleting..." : label}
       </button>
 
-      {open && mounted &&
+      {open && typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-2xl">

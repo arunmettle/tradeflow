@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getQuoteByIdAsync } from "@/features/quotes/repo/quoteRepo";
 import { DeleteQuoteButton } from "@/features/quotes/components/DeleteQuoteButton";
+import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -14,7 +15,8 @@ export default async function QuoteDetailPageAsync({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const quote = await getQuoteByIdAsync(id);
+  const tradie = await getDefaultTradieAsync();
+  const quote = await getQuoteByIdAsync(tradie.id, id);
 
   if (!quote) {
     notFound();

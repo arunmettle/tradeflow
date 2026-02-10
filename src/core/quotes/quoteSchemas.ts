@@ -88,3 +88,53 @@ export const quoteCreateInputSchema = z.object({
 
 export type QuoteLineInput = z.infer<typeof quoteLineInputSchema>;
 export type QuoteCreateInput = z.infer<typeof quoteCreateInputSchema>;
+
+const coerceNonNegativeNumber = (fallback: number) =>
+  coerceNumber(fallback).transform((val) => Math.max(0, val));
+
+export const quoteLineUpdateSchema = z.object({
+  name: nonEmptyTrimmedString,
+  qty: coerceNonNegativeNumber(0),
+  unit: nonEmptyTrimmedString,
+  unitRate: coerceNonNegativeNumber(0),
+  category: trimmedStringWithDefault("labour"),
+});
+
+export const quoteTermsSchema = z.object({
+  depositPercent: coerceNumber(0)
+    .transform((val) => Math.min(Math.max(0, val), 100))
+    .default(0),
+  validityDays: coerceNumber(14)
+    .transform((val) => (val <= 0 ? 1 : Math.floor(val)))
+    .default(14),
+  notes: z.string().trim().default(""),
+});
+
+export const quoteUpdateInputSchema = z.object({
+  customerName: nonEmptyTrimmedString,
+  customerEmail: z
+    .string()
+    .trim()
+    .email()
+    .optional()
+    .or(z.literal(""))
+    .transform((val) => (val === "" ? undefined : val)),
+  siteAddress: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .transform((val) => (val === "" ? undefined : val)),
+  jobDescriptionRaw: nonEmptyTrimmedString,
+  trade: z.string().trim().optional(),
+  jobType: z.string().trim().optional(),
+  scopeBullets: z.array(z.string().trim()).default([]),
+  exclusions: z.array(z.string().trim()).default([]),
+  includeGst: coerceBoolean(true).default(true),
+  terms: quoteTermsSchema.default({}),
+  lines: z.array(quoteLineUpdateSchema).min(1),
+});
+
+export type QuoteLineUpdate = z.infer<typeof quoteLineUpdateSchema>;
+export type QuoteTerms = z.infer<typeof quoteTermsSchema>;
+export type QuoteUpdateInput = z.infer<typeof quoteUpdateInputSchema>;
