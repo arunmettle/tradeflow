@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { listLeadsAsync } from "@/features/leads/repo/leadRepo";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { LeadDraftActions } from "@/features/leads/components/LeadDraftActions";
 
 export default async function LeadsPage() {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const leads = await listLeadsAsync(tradie.id);
 
   return (

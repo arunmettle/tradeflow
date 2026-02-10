@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getQuoteByIdAsync, getPublicLinkForQuoteAsync } from "@/features/quotes/repo/quoteRepo";
 import { createPublicLinkActionAsync, updateQuoteActionAsync } from "@/features/quotes/actions/quoteActions";
 import { QuoteLineEditor } from "@/features/quotes/components/QuoteLineEditor";
@@ -27,7 +27,7 @@ export default async function EditQuotePageAsync({
 }) {
   const { id } = await params;
   const tokenParam = (await searchParams)?.token;
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const quote = await getQuoteByIdAsync(tradie.id, id);
   const existingLink = await getPublicLinkForQuoteAsync(tradie.id, id);
   const token = tokenParam ?? existingLink?.token ?? null;

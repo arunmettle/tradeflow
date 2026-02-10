@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listQuotesAsync } from "@/features/quotes/repo/quoteRepo";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getUnreadCustomerMessageCountsForQuotesAsync } from "@/features/messages/repo/messageRepo";
 import { AutoRefresh } from "@/components/AutoRefresh";
 
@@ -26,7 +26,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function QuotesPageAsync() {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const quotes = await listQuotesAsync(tradie.id);
   const unreadCountsByQuoteId = await getUnreadCustomerMessageCountsForQuotesAsync(
     quotes.map((quote) => ({

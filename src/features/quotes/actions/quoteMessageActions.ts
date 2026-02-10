@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { messageCreateSchema } from "@/core/messages/messageSchemas";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import prisma from "@/db/prisma";
 import { createMessageAsync } from "@/features/messages/repo/messageRepo";
 
 export async function sendTradieMessageActionAsync(quoteId: string, formData: FormData) {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const quote = await prisma.quote.findFirst({
     where: { id: quoteId, tradieId: tradie.id },
   });

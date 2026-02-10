@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { upsertDefaultTradieAsync } from "../repo/tradieRepo";
+import { upsertCurrentTradieAsync } from "../repo/tradieRepo";
 
 const splitCommaList = (value: FormDataEntryValue | null) =>
   (value?.toString() ?? "")
@@ -41,7 +41,7 @@ export async function upsertDefaultTradieActionAsync(formData: FormData) {
   const planInput = formData.get("plan")?.toString().trim().toUpperCase();
   const safePlan = planInput === "PAID" ? "PAID" : "FREE";
 
-  await upsertDefaultTradieAsync({
+  await upsertCurrentTradieAsync({
     slug: formData.get("slug")?.toString().trim() ?? "",
     businessName: formData.get("businessName")?.toString().trim() ?? "",
     tagline: formData.get("tagline")?.toString().trim(),

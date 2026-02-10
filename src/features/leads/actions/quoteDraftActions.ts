@@ -6,11 +6,11 @@ import {
   createDraftQuoteFromLeadAsync,
   deleteDraftQuoteForLeadAsync,
 } from "@/features/quotes/repo/quoteRepo";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getLeadByIdAsync, updateLeadStatusAsync } from "../repo/leadRepo";
 
 export async function generateDraftQuoteActionAsync(leadId: string) {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const lead = await getLeadByIdAsync(tradie.id, leadId);
   if (!lead) {
     throw new Error("Lead not found");
@@ -34,7 +34,7 @@ export async function generateDraftQuoteActionAsync(leadId: string) {
 }
 
 export async function regenerateDraftQuoteActionAsync(leadId: string) {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const lead = await getLeadByIdAsync(tradie.id, leadId);
   if (!lead) {
     throw new Error("Lead not found");

@@ -1,5 +1,5 @@
 import { upsertDefaultTradieActionAsync } from "@/features/tradie/actions/tradieActions";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 type Testimonial = {
   name?: string;
@@ -23,7 +23,7 @@ const toProjects = (value: unknown): Project[] =>
   Array.isArray(value) ? (value as Project[]) : [];
 
 export default async function TradiePage() {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const profileFallback =
     ((tradie.brandSettings as { profile?: Record<string, unknown> } | null)?.profile as
       | Record<string, unknown>

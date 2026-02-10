@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getQuoteByIdAsync } from "@/features/quotes/repo/quoteRepo";
 import { DeleteQuoteButton } from "@/features/quotes/components/DeleteQuoteButton";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -15,7 +15,7 @@ export default async function QuoteDetailPageAsync({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const quote = await getQuoteByIdAsync(tradie.id, id);
 
   if (!quote) {
@@ -46,7 +46,7 @@ export default async function QuoteDetailPageAsync({
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Quote</p>
             <h1 className="text-2xl font-semibold text-gray-900">
-              #{quote?.number} &mdash; {quote?.customerName}
+              #{quote?.number} - {quote?.customerName}
             </h1>
             <p className="text-sm text-gray-600">{quote?.trade} · {quote?.jobType}</p>
           </div>

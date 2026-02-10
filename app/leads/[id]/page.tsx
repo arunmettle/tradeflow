@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLeadByIdAsync } from "@/features/leads/repo/leadRepo";
 import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -10,7 +10,7 @@ type Props = {
 
 export default async function LeadDetailPage({ params }: Props) {
   const { id } = await params;
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const lead = await getLeadByIdAsync(tradie.id, id);
   if (!lead) return notFound();
 

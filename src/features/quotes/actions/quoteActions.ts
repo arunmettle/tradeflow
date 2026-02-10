@@ -11,7 +11,7 @@ import {
 } from "../repo/quoteRepo";
 import { upsertRateMemoryFromQuoteAsync } from "@/features/rates/repo/rateMemoryRepo";
 import { revalidateQuotePaths } from "@/features/quotes/actions/revalidateQuote";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import prisma from "@/db/prisma";
 
 type LineField = "name" | "category" | "qty" | "unit" | "unitRate";
@@ -100,14 +100,15 @@ const buildQuoteInputFromFormData = (formData: FormData): QuoteCreateInput => {
 
 export async function createQuoteActionAsync(formData: FormData) {
   const input = buildQuoteInputFromFormData(formData);
-  const quote = await createQuoteAsync(input);
+  const tradie = await getCurrentTradieAsync();
+  const quote = await createQuoteAsync(tradie.id, input);
   await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
   await revalidateQuotePaths(quote.id);
   redirect(`/quotes/${quote.id}`);
 }
 
 export async function updateQuoteActionAsync(id: string, formData: FormData) {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const input = mapQuoteUpdateFormDataToInput(formData);
   const quote = await updateQuoteAsync(tradie.id, id, input);
   await upsertRateMemoryFromQuoteAsync(quote.tradieId, quote.id);
@@ -116,17 +117,18 @@ export async function updateQuoteActionAsync(id: string, formData: FormData) {
 }
 
 export async function deleteQuoteActionAsync(id: string) {
-  const quote = await prisma.quote.findUnique({ where: { id } });
+  const tradie = await getCurrentTradieAsync();
+  const quote = await prisma.quote.findFirst({ where: { id, tradieId: tradie.id } });
   if (!quote) {
     throw new Error("Quote not found");
   }
-  await prisma.quote.delete({ where: { id } });
+  await prisma.quote.delete({ where: { id: quote.id } });
   await revalidateQuotePaths(id);
   redirect("/quotes");
 }
 
 export async function createPublicLinkActionAsync(quoteId: string) {
-  const tradie = await getDefaultTradieAsync();
+  const tradie = await getCurrentTradieAsync();
   const token = await createPublicLinkAsync(tradie.id, quoteId);
   revalidatePath(`/quotes/${quoteId}/edit`);
   redirect(`/quotes/${quoteId}/edit?token=${encodeURIComponent(token)}`);

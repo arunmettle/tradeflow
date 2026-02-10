@@ -8,21 +8,18 @@ import {
   quoteUpdateInputSchema,
 } from "@/core/quotes/quoteSchemas";
 import { calculateQuoteTotals } from "@/core/quotes/quoteCalculator";
-import { getDefaultTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { QuoteDraft } from "@/core/ai/quoteDraftSchemas";
 import { applyRateSuggestionsToQuoteLinesAsync } from "@/features/rates/repo/rateMemoryRepo";
 import crypto from "crypto";
 const toDecimal = (value: number) => new Prisma.Decimal(value);
 
-export async function createQuoteAsync(input: QuoteCreateInput) {
+export async function createQuoteAsync(tradieId: string, input: QuoteCreateInput) {
   const parsedInput = quoteCreateInputSchema.parse(input);
   const scopeBullets = parsedInput.scopeBullets;
   const exclusions = parsedInput.exclusions;
   const linesInput = parsedInput.lines;
   const trade = parsedInput.trade;
   const jobType = parsedInput.jobType;
-
-  const tradie = await getDefaultTradieAsync();
 
   const { normalizedLines, subTotal, gstAmount, total } = calculateQuoteTotals(
     linesInput.map((line) => quoteLineInputSchema.parse(line)),
@@ -32,7 +29,7 @@ export async function createQuoteAsync(input: QuoteCreateInput) {
   const createdQuote = await prisma.$transaction(async (tx) => {
     const quote = await tx.quote.create({
       data: {
-        tradieId: tradie.id,
+        tradieId,
         customerName: parsedInput.customerName,
         customerEmail: parsedInput.customerEmail,
         siteAddress: parsedInput.siteAddress,
