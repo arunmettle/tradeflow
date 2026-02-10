@@ -2,12 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getCurrentAuthUserAsync, ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/auth/session";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 
 export default async function ProfilePage() {
   const user = await getCurrentAuthUserAsync();
   if (!user) {
     redirect("/auth/sign-in");
   }
+
+  const tradie = await getCurrentTradieAsync();
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const publicProfileUrl = `${baseUrl}/t/${encodeURIComponent(tradie.slug)}`;
 
   async function signOutActionAsync() {
     "use server";
@@ -46,6 +51,22 @@ export default async function ProfilePage() {
           <p className="mt-2 text-sm text-slate-600">
             Edit testimonials, projects, branding, and contact details on your tradie page.
           </p>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-slate-600">
+                <span className="font-medium text-slate-900">Public request link</span>
+                <span className="ml-2 text-xs text-slate-500">(share with customers)</span>
+              </div>
+              <a
+                href={publicProfileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="break-all font-mono text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800"
+              >
+                {publicProfileUrl}
+              </a>
+            </div>
+          </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/tradie"
