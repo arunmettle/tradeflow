@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createLeadActionAsync } from "@/features/leads/actions/leadActions";
 import { getTradieBySlugAsync } from "@/features/tradie/repo/tradieRepo";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -268,13 +269,12 @@ export default async function LeadCapturePage({ params }: Props) {
               />
             </div>
 
-            <button
-              type="submit"
-              className="mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2"
+            <PendingSubmitButton
+              label="Submit request"
+              pendingLabel="Submitting..."
+              className="mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-70"
               style={{ backgroundColor: primaryColor }}
-            >
-              Submit request
-            </button>
+            />
             </div>
           </form>
 
