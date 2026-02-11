@@ -3,6 +3,7 @@ import { listQuotesAsync } from "@/features/quotes/repo/quoteRepo";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getUnreadCustomerMessageCountsForQuotesAsync } from "@/features/messages/repo/messageRepo";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { DeleteDraftQuoteButton } from "@/features/quotes/components/DeleteDraftQuoteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -56,11 +57,11 @@ export default async function QuotesPageAsync() {
           {quotes.map((quote) => {
             const unreadCount = unreadCountsByQuoteId.get(quote.id) ?? 0;
             const hasUnreadMessages = unreadCount > 0;
+            const isDraft = quote.status === "DRAFT";
 
             return (
-              <Link
+              <div
                 key={quote.id}
-                href={`/quotes/${quote.id}/edit`}
                 className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex items-center justify-between">
@@ -78,12 +79,25 @@ export default async function QuotesPageAsync() {
                     </span>
                   </div>
                 </div>
-                <div className="text-base font-medium text-gray-900">{quote.customerName}</div>
+                <Link href={`/quotes/${quote.id}/edit`} className="text-base font-medium text-gray-900">
+                  {quote.customerName}
+                </Link>
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <div>{currency.format(Number(quote.total ?? 0))}</div>
                   <div>{formatDate(new Date(quote.createdAt))}</div>
                 </div>
-              </Link>
+                <div className="mt-1 flex items-center justify-end gap-2">
+                  {isDraft ? (
+                    <DeleteDraftQuoteButton quoteId={quote.id} returnTo="/quotes" />
+                  ) : null}
+                  <Link
+                    href={`/quotes/${quote.id}/edit`}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Open
+                  </Link>
+                </div>
+              </div>
             );
           })}
         </div>

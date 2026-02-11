@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLeadByIdAsync, markLeadViewedAsync } from "@/features/leads/repo/leadRepo";
-import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { DeleteLeadButton } from "@/features/leads/components/DeleteLeadButton";
+import { LeadDraftActions } from "@/features/leads/components/LeadDraftActions";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,6 +14,7 @@ export default async function LeadDetailPage({ params }: Props) {
   const tradie = await getCurrentTradieAsync();
   const existingLead = await getLeadByIdAsync(tradie.id, id);
   if (!existingLead) return notFound();
+  const hasQuote = (existingLead.quotes?.length ?? 0) > 0;
 
   const lead = (await markLeadViewedAsync(tradie.id, id)) ?? existingLead;
   if (!lead) return notFound();
@@ -37,14 +38,7 @@ export default async function LeadDetailPage({ params }: Props) {
             <p className="text-sm text-gray-600">Submitted on {new Date(lead.createdAt).toLocaleString()}</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-            <form action={generateDraftQuoteActionAsync.bind(null, lead.id)}>
-              <button
-                type="submit"
-                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
-              >
-                Generate draft quote
-              </button>
-            </form>
+            <LeadDraftActions leadId={lead.id} hasQuote={hasQuote} />
             <DeleteLeadButton
               leadId={lead.id}
               triggerClassName="w-full rounded-md border border-red-200 bg-red-50 px-4 py-2 text-center text-sm font-semibold text-red-700 hover:bg-red-100 sm:w-auto"

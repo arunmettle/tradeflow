@@ -127,6 +127,34 @@ export async function deleteQuoteActionAsync(id: string) {
   redirect("/quotes?deleted=1");
 }
 
+export async function deleteDraftQuoteActionAsync(formData: FormData) {
+  const tradie = await getCurrentTradieAsync();
+  const quoteId = formData.get("quoteId")?.toString().trim();
+  const returnToRaw = formData.get("returnTo")?.toString().trim();
+  const returnTo = returnToRaw && returnToRaw.startsWith("/") ? returnToRaw : "/quotes";
+
+  if (!quoteId) {
+    redirect(`${returnTo}?error=${encodeURIComponent("Missing quote id")}`);
+  }
+
+  const quote = await prisma.quote.findFirst({
+    where: { id: quoteId, tradieId: tradie.id },
+    select: { id: true, status: true },
+  });
+
+  if (!quote) {
+    redirect(`${returnTo}?error=${encodeURIComponent("Quote not found")}`);
+  }
+
+  if (quote.status !== "DRAFT") {
+    redirect(`${returnTo}?error=${encodeURIComponent("Only draft quotes can be deleted")}`);
+  }
+
+  await prisma.quote.delete({ where: { id: quote.id } });
+  await revalidateQuotePaths(quote.id);
+  redirect(`${returnTo}?deleted=1`);
+}
+
 export async function createPublicLinkActionAsync(quoteId: string) {
   const tradie = await getCurrentTradieAsync();
   const token = await createPublicLinkAsync(tradie.id, quoteId);

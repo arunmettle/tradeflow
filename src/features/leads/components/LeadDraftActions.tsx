@@ -9,17 +9,17 @@ import {
 
 type LeadDraftActionsProps = {
   leadId: string;
-  hasDraftQuote?: boolean;
+  hasQuote?: boolean;
 };
 
-export function LeadDraftActions({ leadId, hasDraftQuote }: LeadDraftActionsProps) {
+export function LeadDraftActions({ leadId, hasQuote }: LeadDraftActionsProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  if (!hasDraftQuote) {
+  if (!hasQuote) {
     return (
       <form action={generateDraftQuoteActionAsync.bind(null, leadId)}>
         <PendingSubmitButton
-          label="Generate"
+          label="Generate draft quote"
           pendingLabel="Generating..."
           className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 transition hover:bg-blue-100 disabled:opacity-70"
         />
@@ -54,7 +54,7 @@ export function LeadDraftActions({ leadId, hasDraftQuote }: LeadDraftActionsProp
                 Regenerate draft quote?
               </h3>
               <p className="mt-2 text-sm text-slate-600">
-                This deletes the current draft for this lead and generates a new one.
+                This generates a fresh draft quote from the lead details.
               </p>
               <div className="mt-4 flex justify-end gap-2">
                 <button

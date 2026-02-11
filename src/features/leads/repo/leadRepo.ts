@@ -51,6 +51,17 @@ export async function getLeadByIdAsync(tradieId: string, id: string) {
 
   return prisma.lead.findFirst({
     where: { id: trimmed, tradieId },
+    include: {
+      quotes: {
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
   });
 }
 

@@ -12,6 +12,7 @@ import { sendTradieMessageActionAsync } from "@/features/quotes/actions/quoteMes
 import { countUnreadByAuthor } from "@/core/messages/conversationNotifications";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
+import { DeleteDraftQuoteButton } from "@/features/quotes/components/DeleteDraftQuoteButton";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -73,9 +74,14 @@ export default async function EditQuotePageAsync({
               <h1 className="text-xl font-semibold text-gray-900">Edit Quote #{quote.number}</h1>
               <p className="text-sm text-gray-600">Update details while in draft.</p>
             </div>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
-              {quote.status}
-            </span>
+            <div className="flex items-center gap-2">
+              {quote.status === "DRAFT" ? (
+                <DeleteDraftQuoteButton quoteId={quote.id} returnTo="/quotes" />
+              ) : null}
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
+                {quote.status}
+              </span>
+            </div>
           </div>
         </div>
 

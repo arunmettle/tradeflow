@@ -29,8 +29,7 @@ export default async function LeadsPage() {
             {/* Mobile cards */}
             <div className="grid gap-3 sm:hidden">
               {leads.map((lead) => {
-                const latestQuote = lead.quotes[0];
-                const hasDraftQuote = latestQuote?.status === "DRAFT";
+                const hasQuote = lead.quotes.length > 0;
                 const unread = !lead.viewedAt;
 
                 return (
@@ -77,7 +76,7 @@ export default async function LeadsPage() {
                     </dl>
 
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <LeadDraftActions leadId={lead.id} hasDraftQuote={hasDraftQuote} />
+                      <LeadDraftActions leadId={lead.id} hasQuote={hasQuote} />
                       <div className="flex items-center gap-3">
                         <DeleteLeadButton leadId={lead.id} />
                         <Link
@@ -107,8 +106,7 @@ export default async function LeadsPage() {
               </div>
               <div className="divide-y divide-gray-100">
                 {leads.map((lead) => {
-                  const latestQuote = lead.quotes[0];
-                  const hasDraftQuote = latestQuote?.status === "DRAFT";
+                  const hasQuote = lead.quotes.length > 0;
                   const unread = !lead.viewedAt;
 
                   return (
@@ -140,7 +138,7 @@ export default async function LeadsPage() {
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </div>
                       <div className="text-right">
-                        <LeadDraftActions leadId={lead.id} hasDraftQuote={hasDraftQuote} />
+                        <LeadDraftActions leadId={lead.id} hasQuote={hasQuote} />
                       </div>
                       <div className="text-right">
                         <DeleteLeadButton leadId={lead.id} />
