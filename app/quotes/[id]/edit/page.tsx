@@ -13,6 +13,7 @@ import { countUnreadByAuthor } from "@/core/messages/conversationNotifications";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { DeleteDraftQuoteButton } from "@/features/quotes/components/DeleteDraftQuoteButton";
+import { ExportPdfButton } from "@/features/quotes/components/ExportPdfButton";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -75,12 +76,7 @@ export default async function EditQuotePageAsync({
               <p className="text-sm text-gray-600">Update details while in draft.</p>
             </div>
             <div className="flex items-center gap-2">
-              <a
-                href={`/quotes/${quote.id}/pdf`}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-              >
-                Export PDF
-              </a>
+              <ExportPdfButton quoteId={quote.id} label="Export PDF" />
               {quote.status === "DRAFT" ? (
                 <DeleteDraftQuoteButton quoteId={quote.id} returnTo="/quotes" />
               ) : null}

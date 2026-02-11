@@ -4,6 +4,7 @@ import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getUnreadCustomerMessageCountsForQuotesAsync } from "@/features/messages/repo/messageRepo";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { DeleteDraftQuoteButton } from "@/features/quotes/components/DeleteDraftQuoteButton";
+import { ExportPdfButton } from "@/features/quotes/components/ExportPdfButton";
 
 export const dynamic = "force-dynamic";
 
@@ -87,12 +88,7 @@ export default async function QuotesPageAsync() {
                   <div>{formatDate(new Date(quote.createdAt))}</div>
                 </div>
                 <div className="mt-1 flex items-center justify-end gap-2">
-                  <a
-                    href={`/quotes/${quote.id}/pdf`}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                  >
-                    PDF
-                  </a>
+                  <ExportPdfButton quoteId={quote.id} label="PDF" />
                   {isDraft ? (
                     <DeleteDraftQuoteButton quoteId={quote.id} returnTo="/quotes" />
                   ) : null}

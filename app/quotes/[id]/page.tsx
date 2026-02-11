@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getQuoteByIdAsync } from "@/features/quotes/repo/quoteRepo";
 import { DeleteQuoteButton } from "@/features/quotes/components/DeleteQuoteButton";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { ExportPdfButton } from "@/features/quotes/components/ExportPdfButton";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -51,12 +52,11 @@ export default async function QuoteDetailPageAsync({
             <p className="text-sm text-gray-600">{quote?.trade} · {quote?.jobType}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={`/quotes/${quote.id}/pdf`}
-              className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline"
-            >
-              Export PDF
-            </a>
+            <ExportPdfButton
+              quoteId={quote.id}
+              label="Export PDF"
+              className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline disabled:opacity-70"
+            />
             <Link
               href="/quotes"
               className="text-sm font-semibold text-gray-700 underline-offset-4 hover:underline"
