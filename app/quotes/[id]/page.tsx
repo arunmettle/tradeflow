@@ -51,6 +51,12 @@ export default async function QuoteDetailPageAsync({
             <p className="text-sm text-gray-600">{quote?.trade} · {quote?.jobType}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={`/quotes/${quote.id}/pdf`}
+              className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline"
+            >
+              Export PDF
+            </a>
             <Link
               href="/quotes"
               className="text-sm font-semibold text-gray-700 underline-offset-4 hover:underline"
