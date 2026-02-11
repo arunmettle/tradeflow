@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getLeadByIdAsync } from "@/features/leads/repo/leadRepo";
+import { getLeadByIdAsync, markLeadViewedAsync } from "@/features/leads/repo/leadRepo";
 import { generateDraftQuoteActionAsync } from "@/features/leads/actions/quoteDraftActions";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { DeleteLeadButton } from "@/features/leads/components/DeleteLeadButton";
@@ -12,7 +12,10 @@ type Props = {
 export default async function LeadDetailPage({ params }: Props) {
   const { id } = await params;
   const tradie = await getCurrentTradieAsync();
-  const lead = await getLeadByIdAsync(tradie.id, id);
+  const existingLead = await getLeadByIdAsync(tradie.id, id);
+  if (!existingLead) return notFound();
+
+  const lead = (await markLeadViewedAsync(tradie.id, id)) ?? existingLead;
   if (!lead) return notFound();
 
   const infoRow = (label: string, value?: string | null) => (

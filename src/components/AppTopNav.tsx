@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/auth/session";
+import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
+import { countUnreadLeadsAsync } from "@/features/leads/repo/leadRepo";
 
 type Props = {
   user: {
@@ -10,7 +12,15 @@ type Props = {
   };
 };
 
-export function AppTopNav({ user }: Props) {
+export async function AppTopNav({ user }: Props) {
+  let unreadLeadCount = 0;
+  try {
+    const tradie = await getCurrentTradieAsync();
+    unreadLeadCount = await countUnreadLeadsAsync(tradie.id);
+  } catch {
+    unreadLeadCount = 0;
+  }
+
   async function signOutActionAsync() {
     "use server";
 
@@ -71,7 +81,18 @@ export function AppTopNav({ user }: Props) {
               href="/leads"
               className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
-              Leads
+              <span className="inline-flex items-center gap-2">
+                <span>Leads</span>
+                {unreadLeadCount > 0 && (
+                  <span
+                    className="inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-white"
+                    aria-label={`${unreadLeadCount} unread leads`}
+                    title={`${unreadLeadCount} unread leads`}
+                  >
+                    {unreadLeadCount > 99 ? "99+" : unreadLeadCount}
+                  </span>
+                )}
+              </span>
             </Link>
             <Link
               href="/profile"

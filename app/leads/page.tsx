@@ -31,11 +31,14 @@ export default async function LeadsPage() {
               {leads.map((lead) => {
                 const latestQuote = lead.quotes[0];
                 const hasDraftQuote = latestQuote?.status === "DRAFT";
+                const unread = !lead.viewedAt;
 
                 return (
                   <div
                     key={lead.id}
-                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                    className={`rounded-xl border p-4 shadow-sm ${
+                      unread ? "border-blue-200 bg-blue-50/40" : "border-gray-200 bg-white"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -48,6 +51,9 @@ export default async function LeadsPage() {
                         {lead.status}
                       </span>
                     </div>
+                    {unread && (
+                      <p className="mt-2 text-xs font-semibold text-blue-700">Unread</p>
+                    )}
 
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
                       <div className="rounded-lg bg-gray-50 p-2">
@@ -103,11 +109,24 @@ export default async function LeadsPage() {
                 {leads.map((lead) => {
                   const latestQuote = lead.quotes[0];
                   const hasDraftQuote = latestQuote?.status === "DRAFT";
+                  const unread = !lead.viewedAt;
 
                   return (
-                    <div key={lead.id} className="grid grid-cols-9 items-center px-4 py-3 text-sm">
+                    <div
+                      key={lead.id}
+                      className={`grid grid-cols-9 items-center px-4 py-3 text-sm ${
+                        unread ? "bg-blue-50/40" : ""
+                      }`}
+                    >
                       <div className="col-span-2">
-                        <div className="font-semibold text-gray-900">{lead.customerName}</div>
+                        <div className="flex items-center gap-2 font-semibold text-gray-900">
+                          <span>{lead.customerName}</span>
+                          {unread && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                              Unread
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-600">{lead.customerEmail}</div>
                       </div>
                       <div className="text-gray-800">{lead.suburb ?? "—"}</div>

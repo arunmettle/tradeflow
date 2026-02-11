@@ -22,7 +22,15 @@ export async function createLeadAsync(tradieId: string, input: LeadCreateInput) 
 export async function listLeadsAsync(tradieId: string) {
   return prisma.lead.findMany({
     where: { tradieId },
-    include: {
+    select: {
+      id: true,
+      customerName: true,
+      customerEmail: true,
+      suburb: true,
+      jobCategory: true,
+      status: true,
+      createdAt: true,
+      viewedAt: true,
       quotes: {
         select: {
           id: true,
@@ -43,6 +51,33 @@ export async function getLeadByIdAsync(tradieId: string, id: string) {
 
   return prisma.lead.findFirst({
     where: { id: trimmed, tradieId },
+  });
+}
+
+export async function countUnreadLeadsAsync(tradieId: string) {
+  return prisma.lead.count({
+    where: {
+      tradieId,
+      viewedAt: null,
+    },
+  });
+}
+
+export async function markLeadViewedAsync(tradieId: string, id: string) {
+  const trimmed = id?.toString().trim();
+  if (!trimmed) return null;
+
+  await prisma.lead.updateMany({
+    where: {
+      tradieId,
+      id: trimmed,
+      viewedAt: null,
+    },
+    data: { viewedAt: new Date() },
+  });
+
+  return prisma.lead.findFirst({
+    where: { tradieId, id: trimmed },
   });
 }
 

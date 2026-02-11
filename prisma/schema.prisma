@@ -59,11 +59,13 @@ model Lead {
   jobDescription String
   photos         Json           @default("[]")
   status         String         @default("NEW")
+  viewedAt       DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   quotes         Quote[]
 
   @@index([tradieId, status, createdAt])
+  @@index([tradieId, viewedAt, createdAt])
 }
 
 model Quote {
