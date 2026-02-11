@@ -385,13 +385,7 @@ export async function getQuoteDraftService(): Promise<QuoteDraftService> {
 
           const draft = await stub.draftQuoteAsync(input);
           if (status === 401 || code === "invalid_api_key") {
-            return quoteDraftSchema.parse({
-              ...draft,
-              missingInfoQuestions: [
-                ...(draft.missingInfoQuestions ?? []),
-                "AI draft unavailable (invalid OPENAI_API_KEY). Using a basic draft.",
-              ],
-            });
+            return quoteDraftSchema.parse(draft);
           }
           return draft;
         }

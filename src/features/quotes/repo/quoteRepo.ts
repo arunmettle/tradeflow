@@ -311,9 +311,7 @@ export async function createDraftQuoteFromLeadAsync(
           terms: {
             depositPercent: 50,
             validityDays: 14,
-            notes: (draft.missingInfoQuestions ?? [])
-              .map((q) => `- ${q}`)
-              .join("\n"),
+            notes: "",
           },
           includeGst: true,
           subTotal: toDecimal(0),
@@ -357,9 +355,7 @@ export async function createDraftQuoteFromLeadAsync(
         terms: {
           depositPercent: 50,
           validityDays: 14,
-          notes: (draft.missingInfoQuestions ?? [])
-            .map((q) => `- ${q}`)
-            .join("\n"),
+          notes: "",
         },
         includeGst: true,
         subTotal: toDecimal(0),

@@ -167,6 +167,21 @@ const toStringArray = (value: unknown) =>
 const toTerms = (value: unknown) =>
   (value as { depositPercent?: number; validityDays?: number; notes?: string } | null) ?? {};
 
+function sanitizeTermsNotesForPdf(notes: string | undefined) {
+  if (!notes) return "";
+  const cleaned = notes
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((line) => {
+      const lower = line.toLowerCase();
+      if (lower.includes("openai") || lower.includes("ai draft unavailable")) return false;
+      if (line.endsWith("?")) return false;
+      return true;
+    });
+  return cleaned.join("\n");
+}
+
 const formatAddress = (tradie: Tradie) => {
   const parts = [
     tradie.addressLine1,
@@ -187,6 +202,7 @@ function QuotePdfDocument({ quote, tradie }: QuotePdfDocumentProps) {
   const scope = toStringArray(quote.scopeBullets);
   const exclusions = toStringArray(quote.exclusions);
   const terms = toTerms(quote.terms);
+  const notesForPdf = sanitizeTermsNotesForPdf(terms.notes);
   const tradieAddress = formatAddress(tradie);
 
   return (
@@ -275,7 +291,7 @@ function QuotePdfDocument({ quote, tradie }: QuotePdfDocumentProps) {
             <Text style={styles.label}>Terms</Text>
             <Text>Deposit: {Number(terms.depositPercent ?? 0)}%</Text>
             <Text>Validity: {Number(terms.validityDays ?? 0)} days</Text>
-            {terms.notes ? <Text style={styles.spacer4}>{terms.notes}</Text> : null}
+            {notesForPdf ? <Text style={styles.spacer4}>{notesForPdf}</Text> : null}
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>Totals</Text>
