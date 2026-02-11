@@ -8,6 +8,7 @@ import {
 } from "@/features/quotes/repo/quoteRepo";
 import { getCurrentTradieAsync } from "@/features/tradie/repo/tradieRepo";
 import { getLeadByIdAsync, updateLeadStatusAsync } from "../repo/leadRepo";
+import { getRateHintsForDraftAsync } from "@/features/rates/repo/rateMemoryRepo";
 
 export async function generateDraftQuoteActionAsync(leadId: string) {
   const tradie = await getCurrentTradieAsync();
@@ -17,8 +18,10 @@ export async function generateDraftQuoteActionAsync(leadId: string) {
   }
 
   console.log("[quote-draft] Generating draft for lead", lead.id);
+  const rateHints = await getRateHintsForDraftAsync(tradie.id, lead.jobCategory, 12);
   const service = await getQuoteDraftService();
   const draft = await service.draftQuoteAsync({
+    tradieId: tradie.id,
     tradieName: tradie.businessName,
     lead: {
       jobCategory: lead.jobCategory,
@@ -26,6 +29,7 @@ export async function generateDraftQuoteActionAsync(leadId: string) {
       siteAddress: lead.siteAddress,
       suburb: lead.suburb,
     },
+    rateHints,
   });
 
   const quote = await createDraftQuoteFromLeadAsync(tradie.id, lead.id, draft);
@@ -42,8 +46,10 @@ export async function regenerateDraftQuoteActionAsync(leadId: string) {
 
   await deleteDraftQuoteForLeadAsync(tradie.id, lead.id);
 
+  const rateHints = await getRateHintsForDraftAsync(tradie.id, lead.jobCategory, 12);
   const service = await getQuoteDraftService();
   const draft = await service.draftQuoteAsync({
+    tradieId: tradie.id,
     tradieName: tradie.businessName,
     lead: {
       jobCategory: lead.jobCategory,
@@ -51,6 +57,7 @@ export async function regenerateDraftQuoteActionAsync(leadId: string) {
       siteAddress: lead.siteAddress,
       suburb: lead.suburb,
     },
+    rateHints,
   });
 
   const quote = await createDraftQuoteFromLeadAsync(tradie.id, lead.id, draft);

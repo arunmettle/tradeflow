@@ -1,6 +1,7 @@
 import { quoteDraftSchema, QuoteDraft } from "@/core/ai/quoteDraftSchemas";
 
 type DraftContext = {
+  tradieId?: string;
   tradieName?: string | null;
   lead: {
     jobCategory?: string | null;
@@ -8,6 +9,16 @@ type DraftContext = {
     siteAddress?: string | null;
     suburb?: string | null;
   };
+  rateHints?: Array<{
+    lineName: string;
+    unit: string;
+    category?: string | null;
+    sampleCount: number;
+    medianRate: number;
+    minRate: number;
+    maxRate: number;
+    categoryMatch: boolean;
+  }>;
 };
 
 export interface QuoteDraftService {
@@ -181,6 +192,18 @@ function enrichDraftWithLeadFacts(input: DraftContext, rawDraft: QuoteDraft): Qu
   const normalizedLineItems = normalizeGenericLineItems(rawDraft.lineItems ?? []);
 
   if (!facts.isFencing) {
+    const contextHints = input.rateHints ?? [];
+    if (normalizedLineItems.length === 0 && contextHints.length > 0) {
+      const inferred = contextHints.slice(0, 4).map((hint) => ({
+        name: hint.lineName,
+        qty: 1,
+        unit: hint.unit || "job",
+      }));
+      return quoteDraftSchema.parse({
+        ...rawDraft,
+        lineItems: inferred,
+      });
+    }
     return quoteDraftSchema.parse({
       ...rawDraft,
       lineItems: normalizedLineItems,
@@ -319,6 +342,13 @@ async function tryCreateOpenAIService(): Promise<QuoteDraftService | null> {
 
     return {
       async draftQuoteAsync(input: DraftContext): Promise<QuoteDraft> {
+        const hintLines = (input.rateHints ?? [])
+          .slice(0, 10)
+          .map((hint, idx) =>
+            `${idx + 1}. ${hint.lineName} | unit=${hint.unit} | sampleCount=${hint.sampleCount} | median=${hint.medianRate}`
+          )
+          .join("\n");
+
         const prompt = [
           "You draft practical trade quote drafts from customer leads.",
           "Return STRICT JSON matching this schema:",
@@ -334,10 +364,13 @@ async function tryCreateOpenAIService(): Promise<QuoteDraftService | null> {
           "- If details are missing, add targeted missingInfoQuestions.",
           "- Ask for missing info only if helpful.",
           "- Keep wording concise and professional.",
+          "- Reuse historical line naming conventions and units where relevant to improve downstream pricing suggestions.",
+          "- Historical rates are context only. Do not output any price or rate.",
           `Tradie: ${input.tradieName ?? "Unknown"}`,
           `Category: ${input.lead.jobCategory ?? "Unspecified"}`,
           `Site: ${input.lead.siteAddress ?? ""} ${input.lead.suburb ?? ""}`,
           `Description: ${input.lead.jobDescription}`,
+          hintLines ? `Historical line context:\n${hintLines}` : "Historical line context: none",
           "Only output JSON. No markdown.",
         ].join("\n");
 

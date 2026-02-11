@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { normalizeLineName } from "@/core/rates/textNormalize";
-import { suggestRateAsync } from "@/core/rates/rateSuggestion";
+import { suggestRateAsync, suggestRateByCategoryAsync } from "@/core/rates/rateSuggestion";
 
 const toDecimal = (val: number) => new Prisma.Decimal(val);
 
@@ -90,12 +90,20 @@ export async function applyRateSuggestionsToQuoteLinesAsync(tradieId: string, qu
     const hasRate = Number(line.unitRate) > 0;
     if (hasRate) continue;
 
-    const suggestion = await suggestRateAsync({
+    const exactOrSimilar = await suggestRateAsync({
       tradieId,
       lineName: line.name,
       unit: line.unit,
       category: line.category,
     });
+    const suggestion =
+      exactOrSimilar ??
+      (await suggestRateByCategoryAsync({
+        tradieId,
+        lineName: line.name,
+        unit: line.unit,
+        category: line.category,
+      }));
 
     if (!suggestion) continue;
 
@@ -111,4 +119,46 @@ export async function applyRateSuggestionsToQuoteLinesAsync(tradieId: string, qu
       },
     });
   }
+}
+
+export async function getRateHintsForDraftAsync(
+  tradieId: string,
+  jobCategory?: string | null,
+  limit = 12
+) {
+  const category = (jobCategory ?? "").trim().toLowerCase();
+  const memories = await prisma.rateMemory.findMany({
+    where: { tradieId },
+    orderBy: [{ sampleCount: "desc" }, { updatedAt: "desc" }],
+    take: Math.max(limit * 2, 20),
+  });
+
+  const ranked = memories
+    .map((memory) => {
+      const categoryMatch =
+        category.length > 0 &&
+        (memory.category ?? "").trim().toLowerCase() === category;
+      const rate =
+        Number(memory.medianRate ?? 0) > 0
+          ? Number(memory.medianRate)
+          : Number(memory.lastRate ?? 0);
+      return {
+        lineName: memory.normalizedName,
+        unit: memory.unit,
+        category: memory.category ?? null,
+        sampleCount: memory.sampleCount ?? 0,
+        medianRate: rate,
+        minRate: Number(memory.minRate ?? 0),
+        maxRate: Number(memory.maxRate ?? 0),
+        categoryMatch,
+      };
+    })
+    .filter((item) => item.medianRate > 0)
+    .sort((a, b) => {
+      if (a.categoryMatch !== b.categoryMatch) return a.categoryMatch ? -1 : 1;
+      return (b.sampleCount ?? 0) - (a.sampleCount ?? 0);
+    })
+    .slice(0, limit);
+
+  return ranked;
 }

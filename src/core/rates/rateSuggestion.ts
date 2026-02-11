@@ -11,7 +11,7 @@ type SuggestionInput = {
 
 type SuggestionResult = {
   suggestedUnitRate: number;
-  rateSource: "history_exact" | "history_similar";
+  rateSource: "history_exact" | "history_similar" | "history_category";
   rateConfidence: number;
   needsReview: boolean;
 };
@@ -70,5 +70,47 @@ export async function suggestRateAsync(
     rateSource: "history_similar",
     rateConfidence: confidence,
     needsReview: confidence < 75,
+  };
+}
+
+export async function suggestRateByCategoryAsync(
+  input: SuggestionInput
+): Promise<SuggestionResult | null> {
+  if (!input.unit || !input.category) return null;
+
+  const categoryNorm = input.category.trim().toLowerCase();
+  if (!categoryNorm) return null;
+
+  const candidates = await prisma.rateMemory.findMany({
+    where: { tradieId: input.tradieId, unit: input.unit },
+  });
+
+  const byCategory = candidates.filter(
+    (candidate) => (candidate.category ?? "").trim().toLowerCase() === categoryNorm
+  );
+  if (byCategory.length === 0) return null;
+
+  const weighted = byCategory.map((candidate) => {
+    const sampleCount = Math.max(1, candidate.sampleCount ?? 1);
+    const baseRate =
+      Number(candidate.medianRate ?? 0) > 0
+        ? Number(candidate.medianRate)
+        : Number(candidate.lastRate ?? 0);
+    return { sampleCount, baseRate };
+  });
+
+  const valid = weighted.filter((item) => item.baseRate > 0);
+  if (valid.length === 0) return null;
+
+  const totalWeight = valid.reduce((sum, item) => sum + item.sampleCount, 0);
+  const weightedRate =
+    valid.reduce((sum, item) => sum + item.baseRate * item.sampleCount, 0) / totalWeight;
+
+  const confidence = Math.min(78, 55 + Math.round(totalWeight / 3));
+  return {
+    suggestedUnitRate: Number(weightedRate.toFixed(2)),
+    rateSource: "history_category",
+    rateConfidence: confidence,
+    needsReview: true,
   };
 }
